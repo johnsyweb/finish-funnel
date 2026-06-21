@@ -1,13 +1,13 @@
 # Handoff: Finish Funnel app
 
 **Date:** 2026-06-21  
-**Status:** v1 sizing app and queue visualisation complete; multi-lane layout in progress; not deployed; no userscript yet
+**Status:** v1 sizing app, queue visualisation, and multi-lane layout complete; finish-line backup not yet modelled; not deployed; no userscript yet
 
 ---
 
 ## Goal
 
-Build a standalone web app that tells parkrun event teams how to size a **finish funnel** so **Finish Tokens** volunteers can hand out numbered tokens in strict finish position order during busy finish periods. v1 was single-lane; multi-lane layouts are in progress.
+Build a standalone web app that tells parkrun event teams how to size a **finish funnel** so **Finish Tokens** volunteers can hand out numbered tokens in strict finish position order during busy finish periods. v1 was single-lane; multi-lane layouts are complete.
 
 Test fixtures:
 
@@ -54,23 +54,23 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Chart interaction    | Click/drag vertical indicator; arrow keys when chart focused; readable clock time on chart                   |
 | API                  | `queuedFinishersAtMoment`; shared sim core records **token handover time** per finisher                      |
 
-### Multi-lane layout (next — designed 2026-06-21)
+### Multi-lane layout (done — 2026-06-21)
 
-| Topic                 | Decision                                                                                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Token handover        | Strict finish position order always; lanes do not create token batches                                                                                                                            |
-| Lane geometry         | Each lane: total metres incl. deceleration; lane queue capacity = `(length − deceleration) ÷ spacing`                                                                                             |
-| Adequacy              | Combined lane capacity (sum) vs peak queue depth; minimum lanes required at configured lane length                                                                                                |
-| Lane assignment       | Stay on current lane until full; then lowest numbered lane with capacity; lanes reopen when emptied; batch letters **A**, **B**, **C**, … only on empty-lane batch starts; minimise lane switches |
-| Overflow              | After all lanes full; queue would back over finish line — **not yet modelled** (flag and warn only)                                                                                               |
-| UI inputs             | **Lane count** + **lane length (m)**; Bushy default 2 × 300 m; Mernda 1 × 30 m                                                                                                                    |
-| Metrics               | Minimum lanes required replaces single-lane recommended metres                                                                                                                                    |
-| Chart                 | Proposed capacity reference line → combined lane capacity                                                                                                                                         |
-| Warnings              | Callout when combined capacity &lt; peak (mutually exclusive with funnel-not-required)                                                                                                            |
-| Selected moment       | Lane layout changes do **not** reset selected moment                                                                                                                                              |
-| Queue table           | **Lane** and sparse **Batch** columns                                                                                                                                                             |
-| Batch marker timeline | Every batch marker moment on chart; orange tick + letter; click to select; Page Up/Down to jump                                                                                                   |
-| Deferred              | **Finish-line backup** — blocked finisher arrivals when capacity breached                                                                                                                         |
+| Topic                 | Decision                                                                                                                                                                                                                                           |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Token handover        | Strict finish position order always; lanes do not create token batches                                                                                                                                                                             |
+| Lane geometry         | Each lane: total metres incl. deceleration; lane queue capacity = `(length − deceleration) ÷ spacing`                                                                                                                                              |
+| Adequacy              | Combined lane capacity (sum) vs peak queue depth; minimum lanes required at configured lane length                                                                                                                                                 |
+| Lane assignment       | Stay on current lane until full; then lowest numbered lane with capacity; batch letters **A**, **B**, **C**, … only on **lane-fill switch** (not at event start or when a lane reopens empty); none when `laneCount === 1`; minimise lane switches |
+| Overflow              | After all lanes full; queue would back over finish line — **not yet modelled** (flag and warn only)                                                                                                                                                |
+| UI inputs             | **Lane count** + **lane length (m)**; Bushy default 2 × 300 m; Mernda 1 × 30 m                                                                                                                                                                     |
+| Metrics               | Minimum lanes required replaces single-lane recommended metres                                                                                                                                                                                     |
+| Chart                 | Proposed capacity reference line → combined lane capacity                                                                                                                                                                                          |
+| Warnings              | Callout when combined capacity &lt; peak (mutually exclusive with funnel-not-required)                                                                                                                                                             |
+| Selected moment       | Lane layout changes do **not** reset selected moment                                                                                                                                                                                               |
+| Queue table           | **Lane** and sparse **Batch** columns                                                                                                                                                                                                              |
+| Batch marker timeline | Every batch marker moment on chart; orange tick + letter; click to select; Page Up/Down to jump                                                                                                                                                    |
+| Deferred              | **Finish-line backup** — blocked finisher arrivals when capacity breached                                                                                                                                                                          |
 
 Implementation issues: [`docs/issues/`](./docs/issues/) (#06–10)
 
@@ -80,7 +80,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–10)
 
 ### Done
 
-- **Domain modules** (85 tests):
+- **Domain modules** (86 tests):
   - `simulateFinishFunnel`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
@@ -101,11 +101,11 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–10)
 
 _Bushy 2 × 300 m → combined capacity 786; shortfall 256 at peak._
 
-### Multi-lane layout (done)
+### Multi-lane layout (done — 2026-06-21)
 
 - `multiLaneFunnel`, `assignFinisherLanes`, lane/batch queue table
 - UI inputs, metrics, finish-line backup warning, combined capacity chart line
-- **Batch marker moments** on queue depth chart timeline
+- **Batch marker moments** on queue depth chart timeline (lane-fill switch only)
 
 ### Not done
 
@@ -152,10 +152,9 @@ aube run build:fixtures   # needs /tmp/*.html from curl (see README)
 
 ## Suggested next steps (priority order)
 
-1. **Multi-lane layout** — issues #06–09 (capacity → lanes → UI → table)
-2. **Finish-line backup** — model blocked arrivals when capacity breached (deferred design)
-3. **Userscript** — port parser + APIs to tampermonkey-parkrun
-4. **Deploy** — johnsy.com hosting alongside other parkrun utilities
+1. **Finish-line backup** — model blocked arrivals when combined capacity breached (issue #11)
+2. **Userscript** — port parser + APIs to tampermonkey-parkrun
+3. **Deploy** — johnsy.com hosting alongside other parkrun utilities
 
 ---
 
@@ -174,7 +173,7 @@ aube run build:fixtures   # needs /tmp/*.html from curl (see README)
 
 - User prefers **Australian English** in UI copy and docs.
 - Toolchain: **mise**, **aube**, **hk** ([en.dev](https://en.dev/)).
-- Do not commit unless explicitly asked.
+- Commit frequently when working AFK; use atomic conventional commits.
 - parkrun results pages return **403 without a browser User-Agent** when curling fixtures.
 - Empty `<div class="compact">` in time cells means **Unknown** — parser handles this.
 - Do not duplicate `CONTEXT.md` content into new docs; update glossary there as terms evolve.
