@@ -39,4 +39,12 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain('tabindex="0"');
     expect(markup).toContain("arrow keys");
   });
+
+  it("includes a searchable queue visualisation region", () => {
+    const markup = buildAppMarkup();
+
+    expect(markup).toContain('id="queue-visualisation-panel"');
+    expect(markup).toContain('id="queue-search"');
+    expect(markup).toContain("Search by name or finish position");
+  });
 });

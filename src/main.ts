@@ -3,6 +3,14 @@ import { attachCanvasResizeHandler } from "./attachCanvasResizeHandler";
 import { attachChartMomentControls } from "./attachChartMomentControls";
 import { buildAppMarkup } from "./buildAppMarkup";
 import {
+  buildQueuePaginationMarkup,
+  buildQueueSummaryMarkup,
+  buildQueueTableMarkup,
+  parseQueueSearchFilter,
+  QUEUE_PAGE_SIZE,
+  queuePageCount,
+} from "./buildQueueVisualisationMarkup";
+import {
   clampSelectedMoment,
   timeRangeFromChartPoints,
   type ChartTimeRange,
@@ -16,7 +24,10 @@ import {
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import { orderFixturesForDisplay } from "./orderFixturesForDisplay";
-import { firstMomentAtPeakQueueDepth } from "./queuedFinishersAtMoment";
+import {
+  firstMomentAtPeakQueueDepth,
+  queuedFinishersAtMoment,
+} from "./queuedFinishersAtMoment";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
 
 type EventFixture = {
@@ -57,6 +68,19 @@ const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
 )!;
 const chartCanvas = document.querySelector<HTMLCanvasElement>("#queue-chart")!;
 const chartWrap = document.querySelector<HTMLElement>("#chart-wrap")!;
+const queueSummaryMount = document.querySelector<HTMLDivElement>(
+  "#queue-summary-mount",
+)!;
+const queueSearchInput =
+  document.querySelector<HTMLInputElement>("#queue-search")!;
+const queueTableMount =
+  document.querySelector<HTMLDivElement>("#queue-table-mount")!;
+const queuePaginationMount = document.querySelector<HTMLDivElement>(
+  "#queue-pagination-mount",
+)!;
+const queueVisualisationPanel = document.querySelector<HTMLElement>(
+  "#queue-visualisation-panel",
+)!;
 
 for (const fixture of fixtures) {
   const option = document.createElement("option");
@@ -69,6 +93,7 @@ eventSelect.value = DEFAULT_FIXTURE_ID;
 let selectedMomentSeconds = 0;
 let simulationStateKey = "";
 let chartTimeRange: ChartTimeRange = { minTimeSeconds: 0, maxTimeSeconds: 0 };
+let queuePageIndex = 0;
 
 function readNumberInput(input: HTMLInputElement, fallback: number): number {
   const value = Number(input.value);
@@ -99,7 +124,41 @@ function currentSimulationStateKey(fixtureId: string): string {
   });
 }
 
-function render(resetSelectedMoment = false): void {
+function renderQueueVisualisation(
+  fixture: EventFixture,
+  finishTokensSettings: {
+    tokensPerMinutePerVolunteer: number;
+    volunteerCount: number;
+  },
+): void {
+  const searchFilter = parseQueueSearchFilter(queueSearchInput.value);
+  const queueResult = queuedFinishersAtMoment({
+    finishers: fixture.finishers,
+    finishTokensSettings,
+    momentSeconds: selectedMomentSeconds,
+    offset: queuePageIndex * QUEUE_PAGE_SIZE,
+    limit: QUEUE_PAGE_SIZE,
+    ...searchFilter,
+  });
+  const pageCount = queuePageCount(queueResult.totalCount, QUEUE_PAGE_SIZE);
+
+  if (queuePageIndex >= pageCount) {
+    queuePageIndex = Math.max(0, pageCount - 1);
+    renderQueueVisualisation(fixture, finishTokensSettings);
+    return;
+  }
+
+  queueSummaryMount.innerHTML = buildQueueSummaryMarkup(queueResult.queueDepth);
+  queueTableMount.innerHTML = buildQueueTableMarkup(queueResult.finishers);
+  queuePaginationMount.innerHTML = buildQueuePaginationMarkup({
+    pageIndex: queuePageIndex,
+    pageCount,
+    pageSize: QUEUE_PAGE_SIZE,
+    totalCount: queueResult.totalCount,
+  });
+}
+
+function render(resetSelectedMoment = false, resetQueuePage = false): void {
   const fixture = selectedFixture();
   const finishTokensSettings = {
     tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
@@ -115,6 +174,12 @@ function render(resetSelectedMoment = false): void {
   );
   const proposedFunnelMetres = readNumberInput(proposedFunnelInput, 30);
   const nextSimulationStateKey = currentSimulationStateKey(fixture.id);
+
+  if (resetSelectedMoment || nextSimulationStateKey !== simulationStateKey) {
+    queuePageIndex = 0;
+  } else if (resetQueuePage) {
+    queuePageIndex = 0;
+  }
 
   const result = analyzeFinishFunnel({
     finishers: fixture.finishers,
@@ -190,6 +255,8 @@ function render(resetSelectedMoment = false): void {
     proposedQueueCapacity,
     selectedMomentSeconds,
   });
+
+  renderQueueVisualisation(fixture, finishTokensSettings);
 }
 
 for (const element of [
@@ -202,6 +269,24 @@ for (const element of [
 }
 eventSelect.addEventListener("change", () => render(true));
 proposedFunnelInput.addEventListener("input", () => render());
+queueSearchInput.addEventListener("input", () => render(false, true));
+
+queueVisualisationPanel.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  if (target.id === "queue-prev-page") {
+    queuePageIndex = Math.max(0, queuePageIndex - 1);
+    render();
+  }
+
+  if (target.id === "queue-next-page") {
+    queuePageIndex += 1;
+    render();
+  }
+});
 
 attachCanvasResizeHandler(chartWrap, () => render());
 attachChartMomentControls({
@@ -210,6 +295,7 @@ attachChartMomentControls({
   getMoment: () => selectedMomentSeconds,
   onMomentChange: (momentSeconds) => {
     selectedMomentSeconds = momentSeconds;
+    queuePageIndex = 0;
     render();
   },
 });

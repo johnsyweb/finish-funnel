@@ -143,6 +143,82 @@ select {
   font-size: 0.95rem;
 }
 
+.queue-summary {
+  margin: 0 0 1rem;
+  color: var(--text);
+}
+
+.queue-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.queue-table-wrap {
+  overflow-x: auto;
+}
+
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.queue-table caption {
+  caption-side: top;
+  text-align: left;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.queue-table th,
+.queue-table td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.queue-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.queue-estimated {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(255, 163, 0, 0.18);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.queue-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.queue-pagination button {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.queue-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.queue-pagination button:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
 canvas {
   width: 100%;
   height: 100%;

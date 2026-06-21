@@ -70,5 +70,16 @@ export function buildAppMarkup(): string {
       ></canvas>
     </div>
   </section>
+
+  <section class="panel" id="queue-visualisation-panel">
+    <h2>Queue at selected moment</h2>
+    <div id="queue-summary-mount" aria-live="polite"></div>
+    <div class="field">
+      <label for="queue-search">Search by name or finish position</label>
+      <input id="queue-search" type="search" autocomplete="off" />
+    </div>
+    <div id="queue-table-mount"></div>
+    <div id="queue-pagination-mount"></div>
+  </section>
 `;
 }
