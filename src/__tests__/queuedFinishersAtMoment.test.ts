@@ -44,7 +44,6 @@ describe("queuedFinishersAtMoment", () => {
         name: "Alex SMITH",
         publishedFinishTime: "18:30",
         lane: "1",
-        batchMarker: "A",
         queuePosition: 1,
         timeWaiting: "0:02",
         timeUntilToken: "0:02",
@@ -178,8 +177,8 @@ describe("queuedFinishersAtMoment", () => {
     expect(result.finishers[0]).toMatchObject({
       position: 1,
       lane: "1",
-      batchMarker: "A",
     });
+    expect(result.finishers[0]?.batchMarker).toBeUndefined();
     expect(result.finishers[1]).toMatchObject({
       position: 2,
       lane: "1",
@@ -188,7 +187,7 @@ describe("queuedFinishersAtMoment", () => {
     expect(result.finishers[2]).toMatchObject({
       position: 3,
       lane: "2",
-      batchMarker: "B",
+      batchMarker: "A",
     });
   });
 

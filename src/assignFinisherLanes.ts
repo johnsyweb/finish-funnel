@@ -93,7 +93,12 @@ export function assignFinisherLanes({
       estimated: arrival.estimated,
     };
 
-    if (occupancy[lane - 1] === 0) {
+    if (
+      laneCount > 1 &&
+      currentLane !== undefined &&
+      occupancy[currentLane - 1] >= perLaneCapacity &&
+      lane !== currentLane
+    ) {
       assignment.batchMarker = batchMarkerForIndex(nextBatchLetterIndex);
       nextBatchLetterIndex += 1;
     }

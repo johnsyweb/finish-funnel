@@ -9,9 +9,9 @@ import type { FinisherArrival, FinisherSchedule } from "../types";
 const twoFinisherLaneLengthMetres =
   DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
 
-function layoutSettings() {
+function layoutSettings(laneCount = 2) {
   return {
-    laneCount: 2,
+    laneCount,
     laneLengthMetres: twoFinisherLaneLengthMetres,
     decelerationZoneMetres: DEFAULT_DECELERATION_ZONE_METRES,
     finisherSpacingMetres: DEFAULT_FINISHER_SPACING_METRES,
@@ -36,7 +36,7 @@ function schedulesFromArrivals(
 }
 
 describe("assignFinisherLanes", () => {
-  it("assigns batch marker A to the first finisher in an empty lane", () => {
+  it("does not assign a batch marker before the first lane-fill switch", () => {
     const arrivals: FinisherArrival[] = [{ timeSeconds: 0, position: 1 }];
 
     const assignments = assignFinisherLanes({
@@ -48,11 +48,11 @@ describe("assignFinisherLanes", () => {
     expect(assignments[0]).toMatchObject({
       position: 1,
       lane: 1,
-      batchMarker: "A",
     });
+    expect(assignments[0]?.batchMarker).toBeUndefined();
   });
 
-  it("stays on the current lane while it still has capacity", () => {
+  it("assigns A when lane 1 fills and the first finisher enters lane 2", () => {
     const arrivals: FinisherArrival[] = [
       { timeSeconds: 0, position: 1 },
       { timeSeconds: 1, position: 2 },
@@ -70,7 +70,6 @@ describe("assignFinisherLanes", () => {
         position: 1,
         arrivalTimeSeconds: 0,
         lane: 1,
-        batchMarker: "A",
       },
       {
         position: 2,
@@ -81,12 +80,46 @@ describe("assignFinisherLanes", () => {
         position: 3,
         arrivalTimeSeconds: 2,
         lane: 2,
-        batchMarker: "B",
+        batchMarker: "A",
       },
     ]);
   });
 
-  it("does not switch back to an earlier lane while the current lane still has capacity", () => {
+  it("assigns B when lane 2 fills and the first new finisher enters lane 1", () => {
+    const arrivals: FinisherArrival[] = [
+      { timeSeconds: 0, position: 1 },
+      { timeSeconds: 1, position: 2 },
+      { timeSeconds: 2, position: 3 },
+      { timeSeconds: 3, position: 4 },
+      { timeSeconds: 10, position: 5 },
+    ];
+    const finisherSchedules: FinisherSchedule[] = [
+      { position: 1, arrivalTimeSeconds: 0, tokenHandoverTimeSeconds: 4 },
+      { position: 2, arrivalTimeSeconds: 1, tokenHandoverTimeSeconds: 8 },
+      { position: 3, arrivalTimeSeconds: 2, tokenHandoverTimeSeconds: 12 },
+      { position: 4, arrivalTimeSeconds: 3, tokenHandoverTimeSeconds: 16 },
+      { position: 5, arrivalTimeSeconds: 10, tokenHandoverTimeSeconds: 20 },
+    ];
+
+    const assignments = assignFinisherLanes({
+      arrivals,
+      finisherSchedules,
+      ...layoutSettings(),
+    });
+
+    expect(assignments[2]).toMatchObject({
+      position: 3,
+      lane: 2,
+      batchMarker: "A",
+    });
+    expect(assignments[4]).toMatchObject({
+      position: 5,
+      lane: 1,
+      batchMarker: "B",
+    });
+  });
+
+  it("stays on the current lane while it still has capacity", () => {
     const arrivals: FinisherArrival[] = [
       { timeSeconds: 0, position: 1 },
       { timeSeconds: 1, position: 2 },
@@ -113,33 +146,22 @@ describe("assignFinisherLanes", () => {
     expect(assignments[3]?.batchMarker).toBeUndefined();
   });
 
-  it("reopens an emptied lane and assigns the next batch letter to its first new finisher", () => {
+  it("assigns no batch markers when only one lane is configured", () => {
     const arrivals: FinisherArrival[] = [
       { timeSeconds: 0, position: 1 },
       { timeSeconds: 1, position: 2 },
       { timeSeconds: 2, position: 3 },
-      { timeSeconds: 3, position: 4 },
-      { timeSeconds: 10, position: 5 },
-    ];
-    const finisherSchedules: FinisherSchedule[] = [
-      { position: 1, arrivalTimeSeconds: 0, tokenHandoverTimeSeconds: 4 },
-      { position: 2, arrivalTimeSeconds: 1, tokenHandoverTimeSeconds: 8 },
-      { position: 3, arrivalTimeSeconds: 2, tokenHandoverTimeSeconds: 12 },
-      { position: 4, arrivalTimeSeconds: 3, tokenHandoverTimeSeconds: 16 },
-      { position: 5, arrivalTimeSeconds: 10, tokenHandoverTimeSeconds: 20 },
     ];
 
     const assignments = assignFinisherLanes({
       arrivals,
-      finisherSchedules,
-      ...layoutSettings(),
+      finisherSchedules: schedulesFromArrivals(arrivals),
+      ...layoutSettings(1),
     });
 
-    expect(assignments[4]).toMatchObject({
-      position: 5,
-      lane: 1,
-      batchMarker: "C",
-    });
+    expect(
+      assignments.every((assignment) => assignment.batchMarker === undefined),
+    ).toBe(true);
   });
 
   it("assigns overflow when every lane is full at arrival time", () => {

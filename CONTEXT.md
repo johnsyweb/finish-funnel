@@ -21,19 +21,19 @@ One roped parallel section of the finish funnel. New finishers stay on the **cur
 _Avoid_: Chute, corridor, batch (describes token grouping, not physical layout)
 
 **Batch marker card**:
-A card handed to the first finisher who starts a new batch in a finish funnel lane — when a lane is empty before their arrival, including when a lane reopens after emptying. Letters run **A**, **B**, **C**, … in batch-start order across the event. Lane switches are minimised: stay on the current lane until full before opening another batch. Only that finisher’s row shows the letter in the queue visualisation. Overflow finishers have no batch marker. Operational aid only; token handover order remains strict finish position order.
+A card handed to the first finisher who enters a lane immediately after a **lane-fill switch** — when the current lane has just reached capacity and the Funnel Manager routes the next finisher to another lane with spare capacity. Not given at event start before any switch, and none when only one finish funnel lane is configured. Example: lane 1 fills → first entrant to lane 2 receives **A**; lane 2 fills → first new entrant to lane 1 receives **B**. Letters run **A**, **B**, **C**, … in switch order. Only that finisher’s row shows the letter in the queue visualisation. Overflow finishers have no batch marker. Operational aid only; token handover order remains strict finish position order.
 _Avoid_: Batch token, lane card, separator card
 
 **Batch marker moment**:
-The finisher arrival time of a finisher who holds a batch marker card — the instant a new physical batch begins on the event timeline. Every batch marker moment for the simulated event is shown on the queue depth chart. On the chart, shown as a short vertical tick at that clock finish time with the batch letter only (no lane number) labelled above the plot in a distinct colour from the selected-moment indicator. Clicking a batch tick moves the selected moment to that instant.
+The finisher arrival time of a finisher who holds a batch marker card — the instant after a lane-fill switch. Every batch marker moment for the simulated event is shown on the queue depth chart. On the chart, shown as a short vertical tick at that clock finish time with the batch letter only labelled above the plot in a distinct colour from the selected-moment indicator. Clicking a batch tick moves the selected moment to that instant.
 _Avoid_: Batch start time (informal), card time
 
 **Funnel Manager**:
-The volunteer who opens and closes finish funnel lanes as each lane fills or empties, and ensures the first finisher in each new batch receives a batch marker card. Lane switches are kept to a minimum to reduce stress and error.
+The volunteer who opens and closes finish funnel lanes as each lane fills or empties, and hands a batch marker card to the first finisher routed to a new lane after a lane-fill switch. Lane switches are kept to a minimum to reduce stress and error.
 _Avoid_: Funnel marshal, lane manager
 
 **Finisher lane assignment**:
-The finish funnel lane a finisher enters at finisher arrival, determined by replaying arrivals and token handovers in time order: stay on the current lane while it has spare capacity; when full, switch to the lowest numbered lane with spare capacity. A new batch marker letter is issued only when the chosen lane is empty. Finishers who arrive when every lane is full are assigned **overflow**.
+The finish funnel lane a finisher enters at finisher arrival, determined by replaying arrivals and token handovers in time order: stay on the current lane while it has spare capacity; when full, switch to the lowest numbered lane with spare capacity. A batch marker letter is issued only to the first finisher entering the target lane after a lane-fill switch. Finishers who arrive when every lane is full are assigned **overflow**.
 _Avoid_: Lane at token, current lane (ambiguous with lane switching after arrival)
 
 **Overflow finisher**:
