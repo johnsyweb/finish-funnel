@@ -68,11 +68,12 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Chart                 | Proposed capacity reference line → combined lane capacity                                                                                                                                                                                          |
 | Warnings              | Funnel-not-required callout when peak ≤ 2; finish-line backup warning only when layout configured without backup modelling                                                                                                                         |
 | Selected moment       | Lane layout changes do **not** reset selected moment                                                                                                                                                                                               |
-| Queue table           | **Lane** and sparse **Batch** columns                                                                                                                                                                                                              |
+| Queue table           | **Lane**, **Batch** (physical batch on every row; card badge on batch marker holder)                                                                                                                                                               |
+| Queue moment summary  | Per-lane utilisation (finishers + metres) and physical batch counts at selected moment                                                                                                                                                             |
 | Batch marker timeline | Every batch marker moment on chart; orange tick + letter; click to select; Page Up/Down to jump                                                                                                                                                    |
-| Deferred              | Finish-line backup delay metrics in UI                                                                                                                                                                                                             |
+| Deferred              | —                                                                                                                                                                                                                                                  |
 
-Implementation issues: [`docs/issues/`](./docs/issues/) (#06–11)
+Implementation issues: [`docs/issues/`](./docs/issues/) (#06–12)
 
 ---
 
@@ -80,7 +81,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–11)
 
 ### Done
 
-- **Domain modules** (105 tests):
+- **Domain modules** (115 tests):
   - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
@@ -114,6 +115,13 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 - Finish-line backup warning hidden when backup is modelled
 - Finisher spacing clamped to lane queue zone in UI and simulation
 - Finish-line backup delay metrics (max, average, count) when backup occurs
+
+### Queue moment summary (done — 2026-06-21)
+
+- `physicalBatch` and `isBatchMarkerHolder` on every multi-lane finisher
+- `queueMomentSummaryFromAssignments`, `buildQueueMomentSummaryMarkup`
+- Per-lane utilisation and batch counts; finish-line blocked line when backup modelled
+- Section heading `Queue at selected moment (N)`; physical batch on every queue table row
 
 ### Not done
 
