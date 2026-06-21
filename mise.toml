@@ -1,0 +1,23 @@
+[env]
+HK_MISE = "1"
+
+[tools]
+node = "lts"
+aube = "latest"
+hk = "latest"
+
+[tasks.setup]
+description = "Install dependencies and register git hooks"
+file = "script/setup"
+
+[tasks.check]
+description = "Typecheck, test, lint, and format check"
+file = "script/check"
+
+[tasks.test]
+description = "Run unit tests"
+file = "script/test"
+
+[tasks.dev]
+description = "Start the Vite development server"
+run = "aube run dev"

@@ -1,0 +1,12 @@
+amends "package://github.com/jdx/hk/releases/download/v1.48.0/hk@1.48.0#/Config.pkl"
+
+hooks {
+  ["pre-commit"] {
+    steps {
+      ["check"] {
+        check = "./script/check"
+        exclusive = true
+      }
+    }
+  }
+}
