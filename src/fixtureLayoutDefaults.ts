@@ -6,6 +6,7 @@ export type FixtureLayoutDefaults = {
 const FIXTURE_LAYOUT_DEFAULTS: Record<string, FixtureLayoutDefaults> = {
   "bushy-1095": { laneCount: 2, laneLengthMetres: 300 },
   "mernda-400": { laneCount: 1, laneLengthMetres: 30 },
+  "albert-melbourne-693": { laneCount: 2, laneLengthMetres: 200 },
 };
 
 export function fixtureLayoutDefaults(

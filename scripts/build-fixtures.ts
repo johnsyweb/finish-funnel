@@ -73,7 +73,18 @@ const mernda = buildFixture({
   ),
 });
 
-for (const fixture of [bushy, mernda]) {
+const albertMelbourne = buildFixture({
+  id: "albert-melbourne-693",
+  eventName: "Albert Melbourne parkrun",
+  eventNumber: 693,
+  countryUrl: "https://www.parkrun.com.au/albertmelbourne/results/2026-06-13/",
+  htmlPath: "/tmp/albertmelbourne20260613.html",
+  outputPath: fileURLToPath(
+    new URL("../public/fixtures/albert-melbourne-693.json", import.meta.url),
+  ),
+});
+
+for (const fixture of [bushy, mernda, albertMelbourne]) {
   const unknownCount = fixture.finishers.filter(
     (finisher) => parseFinishTimeToSeconds(finisher.time) === null,
   ).length;
