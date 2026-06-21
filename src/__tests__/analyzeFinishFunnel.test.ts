@@ -46,6 +46,40 @@ describe("analyzeFinishFunnel", () => {
     expect(result.proposedMultiLaneLayout?.sufficient).toBe(true);
   });
 
+  it("clamps finisher spacing to the lane queue zone", () => {
+    const result = analyzeFinishFunnel({
+      finishers: [{ position: 1, name: "", time: "23:00" }],
+      laneCount: 1,
+      laneLengthMetres: 30,
+      finisherSpacingMetres: 26,
+    });
+
+    expect(result.proposedMultiLaneLayout?.combinedLaneCapacity).toBe(1);
+  });
+
+  it("reports finish-line backup delays when admissions are blocked", () => {
+    const laneLengthMetres =
+      DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
+
+    const result = analyzeFinishFunnel({
+      finishers: Array.from({ length: 5 }, (_, index) => ({
+        position: index + 1,
+        name: "",
+        time: "23:00",
+      })),
+      laneCount: 2,
+      laneLengthMetres,
+    });
+
+    expect(result.finishLineBackupDelays).toMatchObject({
+      delayedFinisherCount: 1,
+    });
+    expect(result.finishLineBackupDelays?.maxDelaySeconds).toBeGreaterThan(0);
+    expect(result.finishLineBackupDelays?.averageDelaySeconds).toBe(
+      result.finishLineBackupDelays?.maxDelaySeconds,
+    );
+  });
+
   it("reports a quiet event may not need a roped-off funnel", () => {
     const result = analyzeFinishFunnel({
       finishers: [

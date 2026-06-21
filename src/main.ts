@@ -21,6 +21,10 @@ import {
   DEFAULT_FINISHER_SPACING_METRES,
   DEFAULT_FIXTURE_ID,
 } from "./defaults";
+import {
+  finisherSpacingMetresFromInput,
+  maximumFinisherSpacingMetres,
+} from "./finisherSpacingLimits";
 import { fixtureLayoutDefaults } from "./fixtureLayoutDefaults";
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
 import { formatFinishClockTime } from "./formatFinishClockTime";
@@ -105,6 +109,42 @@ function readNumberInput(input: HTMLInputElement, fallback: number): number {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function readDecelerationZoneMetres(): number {
+  return readNumberInput(
+    decelerationZoneInput,
+    DEFAULT_DECELERATION_ZONE_METRES,
+  );
+}
+
+function readLaneLengthMetres(): number {
+  return readNumberInput(laneLengthInput, 30);
+}
+
+function readFinisherSpacingMetres(): number {
+  return finisherSpacingMetresFromInput({
+    rawValue: finisherSpacingInput.value,
+    fallback: DEFAULT_FINISHER_SPACING_METRES,
+    laneLengthMetres: readLaneLengthMetres(),
+    decelerationZoneMetres: readDecelerationZoneMetres(),
+  });
+}
+
+function syncFinisherSpacingInput(): void {
+  const laneLengthMetres = readLaneLengthMetres();
+  const decelerationZoneMetres = readDecelerationZoneMetres();
+  const maximum = maximumFinisherSpacingMetres({
+    laneLengthMetres,
+    decelerationZoneMetres,
+  });
+
+  finisherSpacingInput.max = String(maximum);
+
+  const parsed = Number(finisherSpacingInput.value);
+  if (Number.isFinite(parsed) && parsed > maximum) {
+    finisherSpacingInput.value = String(maximum);
+  }
+}
+
 function selectedFixture(): EventFixture {
   const fixture = fixtures.find((entry) => entry.id === eventSelect.value);
   if (!fixture) {
@@ -124,14 +164,8 @@ function currentSimulationStateKey(fixtureId: string): string {
     fixtureId,
     tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
     volunteerCount: readNumberInput(volunteerCountInput, 1),
-    finisherSpacingMetres: readNumberInput(
-      finisherSpacingInput,
-      DEFAULT_FINISHER_SPACING_METRES,
-    ),
-    decelerationZoneMetres: readNumberInput(
-      decelerationZoneInput,
-      DEFAULT_DECELERATION_ZONE_METRES,
-    ),
+    finisherSpacingMetres: readFinisherSpacingMetres(),
+    decelerationZoneMetres: readDecelerationZoneMetres(),
   });
 }
 
@@ -180,21 +214,17 @@ function renderQueueVisualisation(
 }
 
 function render(resetSelectedMoment = false, resetQueuePage = false): void {
+  syncFinisherSpacingInput();
+
   const fixture = selectedFixture();
   const finishTokensSettings = {
     tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
     volunteerCount: readNumberInput(volunteerCountInput, 1),
   };
-  const finisherSpacingMetres = readNumberInput(
-    finisherSpacingInput,
-    DEFAULT_FINISHER_SPACING_METRES,
-  );
-  const decelerationZoneMetres = readNumberInput(
-    decelerationZoneInput,
-    DEFAULT_DECELERATION_ZONE_METRES,
-  );
+  const finisherSpacingMetres = readFinisherSpacingMetres();
+  const decelerationZoneMetres = readDecelerationZoneMetres();
   const laneCount = readNumberInput(laneCountInput, 1);
-  const laneLengthMetres = readNumberInput(laneLengthInput, 30);
+  const laneLengthMetres = readLaneLengthMetres();
   const nextSimulationStateKey = currentSimulationStateKey(fixture.id);
 
   if (resetSelectedMoment || nextSimulationStateKey !== simulationStateKey) {
@@ -255,6 +285,7 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
   metrics.innerHTML = buildMetricsMarkup({
     peakQueueDepth: result.peakQueueDepth,
     proposedMultiLaneLayout,
+    finishLineBackupDelays: result.finishLineBackupDelays,
   });
 
   chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
@@ -282,13 +313,13 @@ for (const element of [
 ]) {
   element.addEventListener("input", () => render(true));
 }
+for (const element of [laneCountInput, laneLengthInput]) {
+  element.addEventListener("input", () => render());
+}
 eventSelect.addEventListener("change", () => {
   applyFixtureLayoutDefaults(eventSelect.value);
   render(true);
 });
-for (const element of [laneCountInput, laneLengthInput]) {
-  element.addEventListener("input", () => render());
-}
 queueSearchInput.addEventListener("input", () => render(false, true));
 
 queueVisualisationPanel.addEventListener("click", (event) => {

@@ -7,6 +7,9 @@ import {
   DEFAULT_FINISH_TOKENS_SETTINGS,
   DEFAULT_FINISHER_SPACING_METRES,
 } from "./defaults";
+import { clampFinisherSpacingMetres } from "./finisherSpacingLimits";
+import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
+import { finishLineBackupDelaySummary } from "./finishLineBackupDelays";
 import { checkProposedMultiLaneLayout } from "./multiLaneFunnel";
 import type { ProposedMultiLaneLayoutCheck } from "./multiLaneFunnel";
 import { parseFinishTimeToSeconds } from "./parseFinishTimeToSeconds";
@@ -37,6 +40,7 @@ export type AnalyzeFinishFunnelResult = {
   proposedMultiLaneLayout?: ProposedMultiLaneLayoutCheck;
   batchMarkerMoments: BatchMarkerMoment[];
   finishLineBackupModelled: boolean;
+  finishLineBackupDelays?: FinishLineBackupDelaySummary;
 };
 
 export function buildFinisherArrivals(
@@ -66,19 +70,33 @@ export function analyzeFinishFunnel(
     input.finishTokensSettings ?? DEFAULT_FINISH_TOKENS_SETTINGS;
   const decelerationZoneMetres =
     input.decelerationZoneMetres ?? DEFAULT_DECELERATION_ZONE_METRES;
+  const laneLengthMetres = input.laneLengthMetres;
   const finisherSpacingMetres =
-    input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES;
+    laneLengthMetres === undefined
+      ? (input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES)
+      : clampFinisherSpacingMetres({
+          finisherSpacingMetres:
+            input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES,
+          laneLengthMetres,
+          decelerationZoneMetres,
+        });
 
-  const arrivals = buildFinisherArrivals(input.finishers);
+  const publishedArrivals = buildFinisherArrivals(input.finishers);
   const simulation = simulateFinishTokens({
-    arrivals,
+    arrivals: publishedArrivals,
     finishTokensSettings,
     laneCount: input.laneCount,
-    laneLengthMetres: input.laneLengthMetres,
+    laneLengthMetres,
     decelerationZoneMetres,
     finisherSpacingMetres,
   });
   const effectiveArrivals = simulation.effectiveArrivals;
+  const finishLineBackupDelays = simulation.finishLineBackupModelled
+    ? finishLineBackupDelaySummary({
+        publishedArrivals,
+        effectiveArrivals,
+      })
+    : undefined;
 
   const proposedMultiLaneLayout =
     input.laneCount === undefined || input.laneLengthMetres === undefined
@@ -113,5 +131,6 @@ export function analyzeFinishFunnel(
     proposedMultiLaneLayout,
     batchMarkerMoments,
     finishLineBackupModelled: simulation.finishLineBackupModelled,
+    finishLineBackupDelays,
   };
 }
