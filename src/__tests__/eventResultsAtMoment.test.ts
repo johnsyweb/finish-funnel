@@ -5,9 +5,9 @@ import {
   DEFAULT_FINISH_TOKENS_SETTINGS,
 } from "../defaults";
 import {
+  eventResultsAtMoment,
   firstMomentAtPeakQueueDepth,
-  queuedFinishersAtMoment,
-} from "../queuedFinishersAtMoment";
+} from "../eventResultsAtMoment";
 
 describe("firstMomentAtPeakQueueDepth", () => {
   it("returns the earliest instant peak queue depth is reached", () => {
@@ -24,11 +24,11 @@ describe("firstMomentAtPeakQueueDepth", () => {
   });
 });
 
-describe("queuedFinishersAtMoment", () => {
-  it("returns queued finishers at the selected moment front first with wait metrics", () => {
+describe("eventResultsAtMoment", () => {
+  it("returns every finisher in finish position order with queued wait metrics", () => {
     const momentSeconds = 18 * 60 + 30 + 2;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "Alex SMITH", time: "18:30" },
         { position: 2, name: "Sam JONES", time: "18:30" },
@@ -38,36 +38,33 @@ describe("queuedFinishersAtMoment", () => {
 
     expect(result.queueDepth).toBe(2);
     expect(result.totalCount).toBe(2);
-    expect(result.finishers).toEqual([
-      {
-        position: 1,
-        name: "Alex SMITH",
-        publishedFinishTime: "18:30",
-        lane: "1",
-        queuePosition: 1,
-        timeWaiting: "0:02",
-        timeUntilToken: "0:02",
-        totalEstimatedQueueingTime: "0:04",
-        estimated: false,
-      },
-      {
-        position: 2,
-        name: "Sam JONES",
-        publishedFinishTime: "18:30",
-        lane: "1",
-        queuePosition: 2,
-        timeWaiting: "0:01",
-        timeUntilToken: "0:06",
-        totalEstimatedQueueingTime: "0:07",
-        estimated: false,
-      },
-    ]);
+    expect(result.visibleCount).toBe(2);
+    expect(result.finishers[0]).toMatchObject({
+      position: 1,
+      name: "Alex SMITH",
+      publishedFinishTime: "18:30",
+      state: "queued",
+      status: "In queue",
+      lane: "1",
+      queuePosition: "1",
+      timeWaiting: "0:02",
+      timeUntilToken: "0:02",
+      totalEstimatedQueueingTime: "0:04",
+      finishTokensVolunteer: "",
+      estimated: false,
+    });
+    expect(result.finishers[1]).toMatchObject({
+      position: 2,
+      name: "Sam JONES",
+      state: "queued",
+      queuePosition: "2",
+    });
   });
 
-  it("excludes finishers who have already received a finish token at the selected moment", () => {
+  it("marks tokened finishers with lane, batch, actual waits, and volunteer label", () => {
     const momentSeconds = 18 * 60 + 30 + 4;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "Alex SMITH", time: "18:30" },
         { position: 2, name: "Sam JONES", time: "18:30" },
@@ -76,38 +73,47 @@ describe("queuedFinishersAtMoment", () => {
     });
 
     expect(result.queueDepth).toBe(1);
-    expect(result.finishers).toHaveLength(1);
-    expect(result.finishers[0]?.name).toBe("Sam JONES");
-    expect(result.finishers[0]?.queuePosition).toBe(1);
-  });
-
-  it("paginates the queued finisher list", () => {
-    const momentSeconds = 23 * 60 + 1;
-
-    const result = queuedFinishersAtMoment({
-      finishers: [
-        { position: 1, name: "First", time: "23:00" },
-        { position: 2, name: "Second", time: "23:00" },
-        { position: 3, name: "Third", time: "23:00" },
-      ],
-      momentSeconds,
-      offset: 1,
-      limit: 1,
-    });
-
-    expect(result.queueDepth).toBe(3);
-    expect(result.totalCount).toBe(3);
-    expect(result.finishers).toHaveLength(1);
     expect(result.finishers[0]).toMatchObject({
-      name: "Second",
-      queuePosition: 2,
+      position: 1,
+      state: "tokened",
+      status: "",
+      lane: "1",
+      queuePosition: "",
+      timeWaiting: "0:04",
+      timeUntilToken: "",
+      totalEstimatedQueueingTime: "0:04",
+      finishTokensVolunteer: "Finish Tokens 1",
+    });
+    expect(result.finishers[1]).toMatchObject({
+      position: 2,
+      state: "queued",
+      status: "In queue",
     });
   });
 
-  it("filters queued finishers by name substring", () => {
+  it("leaves simulation columns blank for not-yet-finished finishers", () => {
+    const result = eventResultsAtMoment({
+      finishers: [
+        { position: 1, name: "Early RUNNER", time: "18:30" },
+        { position: 2, name: "Late RUNNER", time: "19:00" },
+      ],
+      momentSeconds: 18 * 60 + 30 + 2,
+    });
+
+    expect(result.finishers[1]).toMatchObject({
+      position: 2,
+      state: "not-yet-finished",
+      status: "",
+      lane: "",
+      queuePosition: "",
+      finishTokensVolunteer: "",
+    });
+  });
+
+  it("filters visible rows by name substring without changing total count", () => {
     const momentSeconds = 18 * 60 + 30 + 2;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "Alex SMITH", time: "18:30" },
         { position: 2, name: "Sam JONES", time: "18:30" },
@@ -117,14 +123,15 @@ describe("queuedFinishersAtMoment", () => {
     });
 
     expect(result.queueDepth).toBe(2);
-    expect(result.totalCount).toBe(1);
+    expect(result.totalCount).toBe(2);
+    expect(result.visibleCount).toBe(1);
     expect(result.finishers[0]?.name).toBe("Sam JONES");
   });
 
-  it("filters queued finishers by finish position", () => {
+  it("filters visible rows by finish position", () => {
     const momentSeconds = 18 * 60 + 30 + 2;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "Alex SMITH", time: "18:30" },
         { position: 2, name: "Sam JONES", time: "18:30" },
@@ -133,14 +140,15 @@ describe("queuedFinishersAtMoment", () => {
       finishPositionFilter: 1,
     });
 
-    expect(result.totalCount).toBe(1);
+    expect(result.totalCount).toBe(2);
+    expect(result.visibleCount).toBe(1);
     expect(result.finishers[0]?.position).toBe(1);
   });
 
-  it("flags Unknown finish times as estimated in the queue list", () => {
+  it("flags Unknown finish times as estimated", () => {
     const momentSeconds = 23 * 60 + 5;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "Known RUNNER", time: "23:00" },
         { position: 2, name: "Unknown RUNNER", time: "Unknown" },
@@ -163,7 +171,7 @@ describe("queuedFinishersAtMoment", () => {
     const laneLengthMetres =
       DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "First", time: "18:30" },
         { position: 2, name: "Second", time: "18:30" },
@@ -179,13 +187,6 @@ describe("queuedFinishersAtMoment", () => {
       lane: "1",
       physicalBatch: "unnamed",
     });
-    expect(result.finishers[0]?.isBatchMarkerHolder).toBeUndefined();
-    expect(result.finishers[1]).toMatchObject({
-      position: 2,
-      lane: "1",
-      physicalBatch: "unnamed",
-    });
-    expect(result.finishers[1]?.isBatchMarkerHolder).toBeUndefined();
     expect(result.finishers[2]).toMatchObject({
       position: 3,
       lane: "2",
@@ -194,12 +195,43 @@ describe("queuedFinishersAtMoment", () => {
     });
   });
 
+  it("marks finishers waiting at the finish line before funnel admission", () => {
+    const momentSeconds = 23 * 60 + 1;
+    const laneLengthMetres =
+      DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
+
+    const result = eventResultsAtMoment({
+      finishers: [
+        { position: 1, name: "First", time: "23:00" },
+        { position: 2, name: "Second", time: "23:00" },
+        { position: 3, name: "Third", time: "23:00" },
+        { position: 4, name: "Fourth", time: "23:00" },
+        { position: 5, name: "Fifth", time: "23:00" },
+      ],
+      momentSeconds,
+      laneCount: 2,
+      laneLengthMetres,
+    });
+
+    const fifthFinisher = result.finishers.find(
+      (finisher) => finisher.position === 5,
+    );
+
+    expect(fifthFinisher).toMatchObject({
+      state: "finish-line-blocked",
+      status: "At finish line",
+      lane: "",
+      queuePosition: "",
+      finishTokensVolunteer: "",
+    });
+  });
+
   it("assigns lanes instead of overflow when finish-line backup delays admission", () => {
     const momentSeconds = 23 * 60 + 5;
     const laneLengthMetres =
       DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
 
-    const result = queuedFinishersAtMoment({
+    const result = eventResultsAtMoment({
       finishers: [
         { position: 1, name: "First", time: "23:00" },
         { position: 2, name: "Second", time: "23:00" },
