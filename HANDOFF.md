@@ -1,7 +1,7 @@
 # Handoff: Finish Funnel app
 
 **Date:** 2026-06-21  
-**Status:** v1 domain model and UI scaffolded; not committed; no userscript yet
+**Status:** v1 sizing app and queue visualisation complete; not deployed; no userscript yet
 
 ---
 
@@ -20,6 +20,8 @@ Test fixtures:
 
 Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 
+### Sizing (v1 — done)
+
 | Topic                   | Decision                                                                                    |
 | ----------------------- | ------------------------------------------------------------------------------------------- |
 | Primary output          | Queue capacity (people) + derived physical length (metres)                                  |
@@ -31,7 +33,7 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Spacing                 | Configurable finisher spacing (default 0.75 m)                                              |
 | Deceleration            | Fixed zone at finish-line end (default 5 m); not counted in queue capacity                  |
 | Chart                   | Queue depth vs **clock finish time**; peak + proposed capacity reference lines              |
-| Defaults                | 15 tokens/min, 1 volunteer                                                                  |
+| Defaults                | 15 tokens/min, 1 volunteer; default fixture **Mernda #400**                                 |
 | Recommendation rounding | Exact peak capacity; physical length rounded **up to whole metres**                         |
 | “Funnel not required”   | Callout when peak queue depth ≤ **2** (fixed threshold)                                     |
 | Proposed funnel input   | Metres only                                                                                 |
@@ -39,22 +41,38 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Parser sharing          | Implement in finish-funnel first; port to tampermonkey-parkrun when userscript ships        |
 | Out of scope v1         | Multi-lane, speed-aware deceleration, live URL fetch                                        |
 
+### Queue visualisation (next — designed 2026-06-21)
+
+| Topic                | Decision                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Selected moment      | Clock finish time on chart; **queued finisher** = arrived, not yet tokened                                   |
+| Default moment       | **First** instant peak queue depth is reached; reset on simulation settings change                           |
+| Event results fields | Finish **position**, **name** (`data-name`), published **finish time** only                                  |
+| Queue visualisation  | Paginated table (25/page, front first); optional search by name or position; spatial funnel diagram deferred |
+| Table columns        | Finish position, name, time, queue position, time waiting, time until token, total estimated queueing time   |
+| Unknown finishers    | Estimated badge; wait metrics from neighbour-estimated arrival                                               |
+| Chart interaction    | Click/drag vertical indicator; arrow keys when chart focused; readable clock time on chart                   |
+| API                  | New `queuedFinishersAtMoment`; shared sim core records **token handover time** per finisher                  |
+| Priority             | Before userscript and deploy                                                                                 |
+
+Implementation issues: [`docs/issues/`](./docs/issues/)
+
 ---
 
 ## Implementation state
 
 ### Done
 
-- **Domain modules** (all tested, 21 tests passing):
-  - `simulateFinishFunnel` — discrete chronological token handover
-  - `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
+- **Domain modules** (29 tests):
+  - `simulateFinishFunnel`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
-  - `recommendPhysicalFunnelLength`, `checkProposedFunnel`
-  - `analyzeFinishFunnel` — public entry point
+  - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
   - `formatFinishClockTime`, `drawQueueDepthChart`
-- **Fixtures:** `public/fixtures/bushy-1095.json`, `public/fixtures/mernda-400.json` (regenerate via `npm run build:fixtures` using HTML cached in `/tmp/bushy1095.html` and `/tmp/mernda400.html`)
-- **UI:** `index.html`, `src/main.ts` — fixture selector, settings, metrics, adequacy, canvas chart
-- **Build:** `npm test`, `npm run typecheck`, `npm run build` all succeed
+  - `orderFixturesForDisplay`, `attachCanvasResizeHandler`, `buildAppMarkup`
+- **Fixtures:** `public/fixtures/bushy-1095.json`, `public/fixtures/mernda-400.json`
+- **UI:** fixture selector (Mernda default), settings, metrics, adequacy, canvas chart with resize
+- **Tooling:** mise, aube, hk; eslint, prettier; `mise run check`
+- **Git:** six atomic conventional commits on `main`
 - **Docs:** `README.md`, `CONTEXT.md`
 
 ### Fixture analysis (default settings: 1 Finish Tokens volunteer @ 15/min)
@@ -64,18 +82,18 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Bushy #1095 | 1,564     | 1,042      | 787 m              |
 | Mernda #400 | 80        | 3          | 8 m                |
 
-Bushy peak is extreme under single-volunteer defaults — intentional stress test. Mernda peak is 3, so **funnel-not-required callout does not show** (threshold is ≤ 2).
+### Queue visualisation (done)
+
+- Parser/fixtures include finisher **name**
+- `simulateFinishFunnel` records **token handover time** per finisher
+- `queuedFinishersAtMoment` + `firstMomentAtPeakQueueDepth`
+- Chart **selected moment** (click, drag, arrow keys; defaults to first peak)
+- **Queue table** below chart: summary, search, paginated rows (25/page), estimated badge
 
 ### Not done
 
-- No git commits yet (user rule: commit only when asked)
-- No eslint/husky/pre-commit setup (other apps in monorepo have these)
-- No chart resize on window resize
 - No deployment to johnsy.com
 - No tampermonkey-parkrun userscript integration
-- No ADR (none were warranted during design)
-- `drawQueueDepthChart` untested (canvas rendering)
-- Mernda not default-selected in UI (Bushy is first in dropdown)
 
 ---
 
@@ -85,64 +103,59 @@ Bushy peak is extreme under single-volunteer defaults — intentional stress tes
 finish-funnel/
 ├── CONTEXT.md              # Domain glossary
 ├── HANDOFF.md              # This file
+├── docs/issues/            # Implementation issues (no GitHub remote yet)
+├── mise.toml               # mise + aube + hk
+├── hk.pkl                  # pre-commit → script/check
 ├── README.md
 ├── index.html
 ├── package.json
-├── public/fixtures/        # Committed JSON fixtures
+├── public/fixtures/
 ├── scripts/build-fixtures.ts
 └── src/
-    ├── analyzeFinishFunnel.ts   # Main public API
+    ├── analyzeFinishFunnel.ts
     ├── simulateFinishFunnel.ts
-    ├── main.ts                  # UI
+    ├── main.ts
     └── __tests/
 ```
-
-Related existing code (for userscript port later):
-
-- `../tampermonkey-parkrun/lib/assignUnknownFinishTimes.js`
-- `../tampermonkey-parkrun/src/parkrun-charts.user.js` (finishers/min chart; skips Unknowns)
 
 ---
 
 ## Commands
 
 ```bash
-cd finish-funnel
-npm install
-npm test
-npm run dev          # http://localhost:5173
-npm run build:fixtures   # needs /tmp/*.html from curl (see README)
+mise run setup
+aube run dev
+aube test
+mise run check
+aube run build:fixtures   # needs /tmp/*.html from curl (see README)
 ```
 
 ---
 
 ## Suggested next steps (priority order)
 
-1. **Polish UI** — chart resize; default fixture to Mernda; keyboard/accessibility pass
-2. **Tooling** — eslint, prettier, husky (match foretoken/pr-by-pt conventions)
-3. **Commit** — atomic conventional commits when user requests
-4. **Userscript** — results-page parser handoff to finish-funnel (port proven TS to tampermonkey-parkrun)
-5. **Deploy** — johnsy.com hosting alongside other parkrun utilities
+1. **Userscript** — port parser + `queuedFinishersAtMoment` to tampermonkey-parkrun
+2. **Deploy** — johnsy.com hosting alongside other parkrun utilities
+3. **Commit** — atomic conventional commits when requested
 
 ---
 
 ## Suggested skills
 
-| Skill              | When to use                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| `/tdd`             | Continue vertical-slice development (chart resize, userscript parser port)               |
-| `grill-with-docs`  | Revisit design if multi-lane, speed-aware deceleration, or threshold UX needs refinement |
-| `setup-pre-commit` | Add husky/lint-staged before first commit                                                |
-| `prototype`        | Try alternative chart UX or adequacy presentation before committing                      |
-| `review`           | Review branch before PR once commits exist                                               |
-| `to-issues`        | Break remaining work into grabbable issues if splitting across sessions                  |
+| Skill             | When to use                                                      |
+| ----------------- | ---------------------------------------------------------------- |
+| `/tdd`            | Queue visualisation vertical slices                              |
+| `grill-with-docs` | Revisit design if spatial funnel or richer results fields needed |
+| `to-issues`       | Further breakdown if slices need splitting                       |
+| `review`          | Review branch before PR once remote exists                       |
 
 ---
 
 ## Notes for fresh agent
 
 - User prefers **Australian English** in UI copy and docs.
-- User rules: prettier, lint, typecheck, tests before commit; conventional commits; atomic changes — but **do not commit unless explicitly asked**.
+- Toolchain: **mise**, **aube**, **hk** ([en.dev](https://en.dev/)).
+- Do not commit unless explicitly asked.
 - parkrun results pages return **403 without a browser User-Agent** when curling fixtures.
 - Empty `<div class="compact">` in time cells means **Unknown** — parser handles this.
 - Do not duplicate `CONTEXT.md` content into new docs; update glossary there as terms evolve.
