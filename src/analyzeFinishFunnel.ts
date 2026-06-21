@@ -11,9 +11,15 @@ import { clampFinisherSpacingMetres } from "./finisherSpacingLimits";
 import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
 import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
 import { finishLineBackupDelaySummary } from "./finishLineBackupDelays";
-import { checkProposedMultiLaneLayout } from "./multiLaneFunnel";
-import type { ProposedMultiLaneLayoutCheck } from "./multiLaneFunnel";
+import {
+  checkProposedMultiLaneLayout,
+  type ProposedMultiLaneLayoutCheck,
+} from "./multiLaneFunnel";
 import { parseFinishTimeToSeconds } from "./parseFinishTimeToSeconds";
+import {
+  recommendFunnelLayout,
+  type RecommendedFunnelLayout,
+} from "./recommendFunnelLayout";
 import { simulateFinishTokens } from "./simulateFinishTokens";
 import { spreadArrivalsWithinSecond } from "./spreadArrivalsWithinSecond";
 import type { FinishTokensSettings, FinisherArrival } from "./types";
@@ -29,6 +35,8 @@ export type AnalyzeFinishFunnelInput = {
   finishTokensSettings?: FinishTokensSettings;
   decelerationZoneMetres?: number;
   finisherSpacingMetres?: number;
+  maximumLaneLengthMetres?: number;
+  maximumLaneCount?: number;
   laneCount?: number;
   laneLengthMetres?: number;
 };
@@ -38,6 +46,7 @@ export type AnalyzeFinishFunnelResult = {
   funnelNotRequired: boolean;
   queueDepthOverTime: Array<{ timeSeconds: number; queueDepth: number }>;
   arrivals: FinisherArrival[];
+  recommendedFunnelLayout?: RecommendedFunnelLayout;
   proposedMultiLaneLayout?: ProposedMultiLaneLayoutCheck;
   batchMarkerMoments: BatchMarkerMoment[];
   finishLineBackupModelled: boolean;
@@ -72,28 +81,51 @@ export function analyzeFinishFunnel(
     input.finishTokensSettings ?? DEFAULT_FINISH_TOKENS_SETTINGS;
   const decelerationZoneMetres =
     input.decelerationZoneMetres ?? DEFAULT_DECELERATION_ZONE_METRES;
-  const laneLengthMetres = input.laneLengthMetres;
+  const proposedLaneLengthMetres = input.laneLengthMetres;
   const finisherSpacingMetres =
-    laneLengthMetres === undefined
+    proposedLaneLengthMetres === undefined
       ? (input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES)
       : clampFinisherSpacingMetres({
           finisherSpacingMetres:
             input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES,
-          laneLengthMetres,
+          laneLengthMetres: proposedLaneLengthMetres,
           decelerationZoneMetres,
         });
 
   const publishedArrivals = buildFinisherArrivals(input.finishers);
-  const simulation = simulateFinishTokens({
+  const uncappedSimulation = simulateFinishTokens({
     arrivals: publishedArrivals,
     finishTokensSettings,
-    laneCount: input.laneCount,
-    laneLengthMetres,
     decelerationZoneMetres,
     finisherSpacingMetres,
   });
-  const effectiveArrivals = simulation.effectiveArrivals;
-  const finishLineBackupDelays = simulation.finishLineBackupModelled
+
+  const recommendedFunnelLayout =
+    input.maximumLaneCount === undefined ||
+    input.maximumLaneLengthMetres === undefined
+      ? undefined
+      : recommendFunnelLayout({
+          peakQueueDepth: uncappedSimulation.peakQueueDepth,
+          maximumLaneLengthMetres: input.maximumLaneLengthMetres,
+          maximumLaneCount: input.maximumLaneCount,
+          decelerationZoneMetres,
+          finisherSpacingMetres,
+        });
+
+  const layoutSimulation =
+    input.laneCount === undefined || input.laneLengthMetres === undefined
+      ? uncappedSimulation
+      : simulateFinishTokens({
+          arrivals: publishedArrivals,
+          finishTokensSettings,
+          laneCount: input.laneCount,
+          laneLengthMetres: input.laneLengthMetres,
+          decelerationZoneMetres,
+          finisherSpacingMetres,
+        });
+
+  const effectiveArrivals = layoutSimulation.effectiveArrivals;
+  const finishLineBackupDelays = layoutSimulation.finishLineBackupModelled
     ? finishLineBackupDelaySummary({
         publishedArrivals,
         effectiveArrivals,
@@ -106,7 +138,7 @@ export function analyzeFinishFunnel(
       : checkProposedMultiLaneLayout({
           laneCount: input.laneCount,
           laneLengthMetres: input.laneLengthMetres,
-          peakQueueDepth: simulation.peakQueueDepth,
+          peakQueueDepth: uncappedSimulation.peakQueueDepth,
           decelerationZoneMetres,
           finisherSpacingMetres,
         });
@@ -117,7 +149,7 @@ export function analyzeFinishFunnel(
       : batchMarkerMomentsFromAssignments(
           assignFinisherLanes({
             arrivals: effectiveArrivals,
-            finisherSchedules: simulation.finisherSchedules,
+            finisherSchedules: layoutSimulation.finisherSchedules,
             laneCount: input.laneCount,
             laneLengthMetres: input.laneLengthMetres,
             decelerationZoneMetres,
@@ -126,14 +158,15 @@ export function analyzeFinishFunnel(
         );
 
   return {
-    peakQueueDepth: simulation.peakQueueDepth,
-    funnelNotRequired: simulation.funnelNotRequired,
-    queueDepthOverTime: simulation.queueDepthOverTime,
+    peakQueueDepth: uncappedSimulation.peakQueueDepth,
+    funnelNotRequired: uncappedSimulation.funnelNotRequired,
+    queueDepthOverTime: layoutSimulation.queueDepthOverTime,
     arrivals: effectiveArrivals,
+    recommendedFunnelLayout,
     proposedMultiLaneLayout,
     batchMarkerMoments,
-    finishLineBackupModelled: simulation.finishLineBackupModelled,
+    finishLineBackupModelled: layoutSimulation.finishLineBackupModelled,
     finishLineBackupDelays,
-    tokenSupplyGaps: simulation.tokenSupplyGaps,
+    tokenSupplyGaps: layoutSimulation.tokenSupplyGaps,
   };
 }

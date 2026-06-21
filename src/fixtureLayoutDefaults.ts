@@ -1,12 +1,15 @@
 export type FixtureLayoutDefaults = {
-  laneCount: number;
-  laneLengthMetres: number;
+  maximumLaneCount: number;
+  maximumLaneLengthMetres: number;
 };
 
 const FIXTURE_LAYOUT_DEFAULTS: Record<string, FixtureLayoutDefaults> = {
-  "bushy-1095": { laneCount: 2, laneLengthMetres: 300 },
-  "mernda-400": { laneCount: 1, laneLengthMetres: 30 },
-  "albert-melbourne-693": { laneCount: 2, laneLengthMetres: 200 },
+  "bushy-1095": { maximumLaneCount: 3, maximumLaneLengthMetres: 300 },
+  "mernda-400": { maximumLaneCount: 1, maximumLaneLengthMetres: 30 },
+  "albert-melbourne-693": {
+    maximumLaneCount: 2,
+    maximumLaneLengthMetres: 200,
+  },
 };
 
 export function fixtureLayoutDefaults(
@@ -14,8 +17,8 @@ export function fixtureLayoutDefaults(
 ): FixtureLayoutDefaults {
   return (
     FIXTURE_LAYOUT_DEFAULTS[fixtureId] ?? {
-      laneCount: 1,
-      laneLengthMetres: 30,
+      maximumLaneCount: 1,
+      maximumLaneLengthMetres: 30,
     }
   );
 }

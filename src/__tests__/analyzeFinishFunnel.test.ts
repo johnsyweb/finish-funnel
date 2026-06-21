@@ -27,7 +27,7 @@ describe("analyzeFinishFunnel", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("caps peak queue depth at combined lane capacity when layout is insufficient", () => {
+  it("caps queue depth on the chart when the proposed layout is insufficient", () => {
     const laneLengthMetres =
       DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
 
@@ -37,13 +37,38 @@ describe("analyzeFinishFunnel", () => {
         name: "",
         time: "23:00",
       })),
+      maximumLaneCount: 3,
+      maximumLaneLengthMetres: 300,
       laneCount: 2,
       laneLengthMetres,
     });
 
     expect(result.finishLineBackupModelled).toBe(true);
-    expect(result.peakQueueDepth).toBe(4);
-    expect(result.proposedMultiLaneLayout?.sufficient).toBe(true);
+    expect(result.peakQueueDepth).toBe(10);
+    expect(
+      Math.max(...result.queueDepthOverTime.map((point) => point.queueDepth)),
+    ).toBe(4);
+    expect(result.proposedMultiLaneLayout?.sufficient).toBe(false);
+  });
+
+  it("recommends a layout from site constraints and uncapped peak queue depth", () => {
+    const result = analyzeFinishFunnel({
+      finishers: Array.from({ length: 10 }, (_, index) => ({
+        position: index + 1,
+        name: "",
+        time: "23:00",
+      })),
+      maximumLaneCount: 3,
+      maximumLaneLengthMetres: 300,
+      laneCount: 2,
+      laneLengthMetres: 30,
+    });
+
+    expect(result.recommendedFunnelLayout).toMatchObject({
+      laneCount: 1,
+      laneLengthMetres: 13,
+      sufficient: true,
+    });
   });
 
   it("clamps finisher spacing to the lane queue zone", () => {

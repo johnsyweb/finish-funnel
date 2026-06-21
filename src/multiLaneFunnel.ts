@@ -57,15 +57,18 @@ export function minimumLanesRequired({
   return Math.ceil(peakQueueDepth / perLane);
 }
 
-export type ProposedMultiLaneLayoutCheck = {
+export type FunnelLayoutAdequacy = {
   sufficient: boolean;
   combinedLaneCapacity: number;
   headroomFinishers: number;
   shortfallFinishers: number;
+};
+
+export type ProposedMultiLaneLayoutCheck = FunnelLayoutAdequacy & {
   minimumLanesRequired: number;
 };
 
-export function checkProposedMultiLaneLayout({
+export function funnelLayoutAdequacy({
   laneCount,
   laneLengthMetres,
   peakQueueDepth,
@@ -77,7 +80,7 @@ export function checkProposedMultiLaneLayout({
   peakQueueDepth: number;
   decelerationZoneMetres: number;
   finisherSpacingMetres: number;
-}): ProposedMultiLaneLayoutCheck {
+}): FunnelLayoutAdequacy {
   const combinedLaneCapacityValue = combinedLaneCapacity({
     laneCount,
     laneLengthMetres,
@@ -92,6 +95,30 @@ export function checkProposedMultiLaneLayout({
     combinedLaneCapacity: combinedLaneCapacityValue,
     headroomFinishers: sufficient ? difference : 0,
     shortfallFinishers: sufficient ? 0 : -difference,
+  };
+}
+
+export function checkProposedMultiLaneLayout({
+  laneCount,
+  laneLengthMetres,
+  peakQueueDepth,
+  decelerationZoneMetres,
+  finisherSpacingMetres,
+}: {
+  laneCount: number;
+  laneLengthMetres: number;
+  peakQueueDepth: number;
+  decelerationZoneMetres: number;
+  finisherSpacingMetres: number;
+}): ProposedMultiLaneLayoutCheck {
+  return {
+    ...funnelLayoutAdequacy({
+      laneCount,
+      laneLengthMetres,
+      peakQueueDepth,
+      decelerationZoneMetres,
+      finisherSpacingMetres,
+    }),
     minimumLanesRequired: minimumLanesRequired({
       peakQueueDepth,
       laneLengthMetres,

@@ -2,24 +2,24 @@ import { describe, expect, it } from "vitest";
 import { fixtureLayoutDefaults } from "../fixtureLayoutDefaults";
 
 describe("fixtureLayoutDefaults", () => {
-  it("defaults Bushy to 2 lanes of 300 m", () => {
+  it("defaults Bushy to 3 lanes of up to 300 m", () => {
     expect(fixtureLayoutDefaults("bushy-1095")).toEqual({
-      laneCount: 2,
-      laneLengthMetres: 300,
+      maximumLaneCount: 3,
+      maximumLaneLengthMetres: 300,
     });
   });
 
-  it("defaults Mernda to 1 lane of 30 m", () => {
+  it("defaults Mernda to 1 lane of up to 30 m", () => {
     expect(fixtureLayoutDefaults("mernda-400")).toEqual({
-      laneCount: 1,
-      laneLengthMetres: 30,
+      maximumLaneCount: 1,
+      maximumLaneLengthMetres: 30,
     });
   });
 
-  it("defaults Albert Melbourne to 2 lanes of 200 m", () => {
+  it("defaults Albert Melbourne to 2 lanes of up to 200 m", () => {
     expect(fixtureLayoutDefaults("albert-melbourne-693")).toEqual({
-      laneCount: 2,
-      laneLengthMetres: 200,
+      maximumLaneCount: 2,
+      maximumLaneLengthMetres: 200,
     });
   });
 });
