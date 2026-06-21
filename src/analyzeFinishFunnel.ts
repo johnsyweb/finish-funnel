@@ -10,7 +10,7 @@ import {
 import { checkProposedMultiLaneLayout } from "./multiLaneFunnel";
 import type { ProposedMultiLaneLayoutCheck } from "./multiLaneFunnel";
 import { parseFinishTimeToSeconds } from "./parseFinishTimeToSeconds";
-import { simulateFinishFunnel } from "./simulateFinishFunnel";
+import { simulateFinishTokens } from "./simulateFinishTokens";
 import { spreadArrivalsWithinSecond } from "./spreadArrivalsWithinSecond";
 import type { FinishTokensSettings, FinisherArrival } from "./types";
 
@@ -36,6 +36,7 @@ export type AnalyzeFinishFunnelResult = {
   arrivals: FinisherArrival[];
   proposedMultiLaneLayout?: ProposedMultiLaneLayoutCheck;
   batchMarkerMoments: BatchMarkerMoment[];
+  finishLineBackupModelled: boolean;
 };
 
 export function buildFinisherArrivals(
@@ -69,7 +70,15 @@ export function analyzeFinishFunnel(
     input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES;
 
   const arrivals = buildFinisherArrivals(input.finishers);
-  const simulation = simulateFinishFunnel(arrivals, finishTokensSettings);
+  const simulation = simulateFinishTokens({
+    arrivals,
+    finishTokensSettings,
+    laneCount: input.laneCount,
+    laneLengthMetres: input.laneLengthMetres,
+    decelerationZoneMetres,
+    finisherSpacingMetres,
+  });
+  const effectiveArrivals = simulation.effectiveArrivals;
 
   const proposedMultiLaneLayout =
     input.laneCount === undefined || input.laneLengthMetres === undefined
@@ -87,7 +96,7 @@ export function analyzeFinishFunnel(
       ? []
       : batchMarkerMomentsFromAssignments(
           assignFinisherLanes({
-            arrivals,
+            arrivals: effectiveArrivals,
             finisherSchedules: simulation.finisherSchedules,
             laneCount: input.laneCount,
             laneLengthMetres: input.laneLengthMetres,
@@ -100,8 +109,9 @@ export function analyzeFinishFunnel(
     peakQueueDepth: simulation.peakQueueDepth,
     funnelNotRequired: simulation.funnelNotRequired,
     queueDepthOverTime: simulation.queueDepthOverTime,
-    arrivals,
+    arrivals: effectiveArrivals,
     proposedMultiLaneLayout,
     batchMarkerMoments,
+    finishLineBackupModelled: simulation.finishLineBackupModelled,
   };
 }

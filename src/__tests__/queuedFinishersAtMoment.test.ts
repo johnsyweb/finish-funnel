@@ -191,8 +191,8 @@ describe("queuedFinishersAtMoment", () => {
     });
   });
 
-  it("shows overflow in the lane column when the proposed layout is full", () => {
-    const momentSeconds = 23 * 60 + 1;
+  it("assigns lanes instead of overflow when finish-line backup delays admission", () => {
+    const momentSeconds = 23 * 60 + 5;
     const laneLengthMetres =
       DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
 
@@ -209,13 +209,11 @@ describe("queuedFinishersAtMoment", () => {
       laneLengthMetres,
     });
 
-    const overflowFinisher = result.finishers.find(
+    const fifthFinisher = result.finishers.find(
       (finisher) => finisher.position === 5,
     );
 
-    expect(overflowFinisher).toMatchObject({
-      lane: "Overflow",
-    });
-    expect(overflowFinisher?.batchMarker).toBeUndefined();
+    expect(fifthFinisher).toBeDefined();
+    expect(fifthFinisher?.lane).not.toBe("Overflow");
   });
 });

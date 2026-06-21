@@ -241,6 +241,7 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
     funnelNotRequired: result.funnelNotRequired,
     combinedLaneCapacity: proposedMultiLaneLayout.combinedLaneCapacity,
     peakQueueDepth: result.peakQueueDepth,
+    finishLineBackupModelled: result.finishLineBackupModelled,
   });
 
   if (calloutState.hidden) {

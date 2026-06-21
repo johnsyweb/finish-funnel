@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { analyzeFinishFunnel } from "../analyzeFinishFunnel";
+import {
+  DEFAULT_DECELERATION_ZONE_METRES,
+  DEFAULT_FINISHER_SPACING_METRES,
+} from "../defaults";
 
 describe("analyzeFinishFunnel", () => {
   it("recommends a rounded physical length for a busy burst of finishers", () => {
@@ -16,9 +20,30 @@ describe("analyzeFinishFunnel", () => {
 
     expect(result.peakQueueDepth).toBeGreaterThan(2);
     expect(result.funnelNotRequired).toBe(false);
+    expect(result.finishLineBackupModelled).toBe(true);
+    expect(result.proposedMultiLaneLayout?.sufficient).toBe(true);
     expect(
       result.proposedMultiLaneLayout?.minimumLanesRequired,
     ).toBeGreaterThan(0);
+  });
+
+  it("caps peak queue depth at combined lane capacity when layout is insufficient", () => {
+    const laneLengthMetres =
+      DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
+
+    const result = analyzeFinishFunnel({
+      finishers: Array.from({ length: 10 }, (_, index) => ({
+        position: index + 1,
+        name: "",
+        time: "23:00",
+      })),
+      laneCount: 2,
+      laneLengthMetres,
+    });
+
+    expect(result.finishLineBackupModelled).toBe(true);
+    expect(result.peakQueueDepth).toBe(4);
+    expect(result.proposedMultiLaneLayout?.sufficient).toBe(true);
   });
 
   it("reports a quiet event may not need a roped-off funnel", () => {

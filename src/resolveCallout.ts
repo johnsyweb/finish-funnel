@@ -6,10 +6,12 @@ export function resolveCallout({
   funnelNotRequired,
   combinedLaneCapacity,
   peakQueueDepth,
+  finishLineBackupModelled = false,
 }: {
   funnelNotRequired: boolean;
   combinedLaneCapacity: number;
   peakQueueDepth: number;
+  finishLineBackupModelled?: boolean;
 }): CalloutState {
   if (funnelNotRequired) {
     return {
@@ -19,7 +21,7 @@ export function resolveCallout({
     };
   }
 
-  if (combinedLaneCapacity < peakQueueDepth) {
+  if (!finishLineBackupModelled && combinedLaneCapacity < peakQueueDepth) {
     return {
       hidden: false,
       className: "callout warn",

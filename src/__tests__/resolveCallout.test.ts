@@ -30,6 +30,17 @@ describe("resolveCallout", () => {
     });
   });
 
+  it("hides the finish-line backup warning when backup is modelled", () => {
+    expect(
+      resolveCallout({
+        funnelNotRequired: false,
+        combinedLaneCapacity: 786,
+        peakQueueDepth: 786,
+        finishLineBackupModelled: true,
+      }),
+    ).toEqual({ hidden: true });
+  });
+
   it("hides the callout when the layout is sufficient and a funnel is needed", () => {
     expect(
       resolveCallout({

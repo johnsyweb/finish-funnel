@@ -9,7 +9,7 @@ import {
   DEFAULT_FINISHER_SPACING_METRES,
 } from "./defaults";
 import { formatFinishClockTime } from "./formatFinishClockTime";
-import { simulateFinishFunnel } from "./simulateFinishFunnel";
+import { simulateFinishTokens } from "./simulateFinishTokens";
 import type { FinishTokensSettings } from "./types";
 
 const DEFAULT_PAGE_LIMIT = 25;
@@ -99,9 +99,16 @@ export function queuedFinishersAtMoment(
   );
 
   const arrivals = buildFinisherArrivals(input.finishers);
-  const simulation = simulateFinishFunnel(arrivals, finishTokensSettings);
-  const laneAssignments = assignFinisherLanes({
+  const simulation = simulateFinishTokens({
     arrivals,
+    finishTokensSettings,
+    laneCount,
+    laneLengthMetres,
+    decelerationZoneMetres,
+    finisherSpacingMetres,
+  });
+  const laneAssignments = assignFinisherLanes({
+    arrivals: simulation.effectiveArrivals,
     finisherSchedules: simulation.finisherSchedules,
     laneCount,
     laneLengthMetres,
