@@ -49,11 +49,13 @@ describe("simulateFinishFunnel", () => {
         position: 1,
         arrivalTimeSeconds: 0,
         tokenHandoverTimeSeconds: 4,
+        finishTokensVolunteerNumber: 1,
       },
       {
         position: 2,
         arrivalTimeSeconds: 0.5,
         tokenHandoverTimeSeconds: 8,
+        finishTokensVolunteerNumber: 1,
       },
     ]);
     expect(result.effectiveArrivals).toEqual([
@@ -84,16 +86,19 @@ describe("simulateFinishFunnel", () => {
         position: 1,
         arrivalTimeSeconds: 0,
         tokenHandoverTimeSeconds: 4,
+        finishTokensVolunteerNumber: 1,
       },
       {
         position: 2,
         arrivalTimeSeconds: 0.5,
         tokenHandoverTimeSeconds: 8,
+        finishTokensVolunteerNumber: 1,
       },
       {
         position: 3,
         arrivalTimeSeconds: 4,
         tokenHandoverTimeSeconds: 12,
+        finishTokensVolunteerNumber: 1,
       },
     ]);
   });
@@ -152,5 +157,28 @@ describe("simulateFinishFunnel", () => {
     );
 
     expect(result.peakQueueDepth).toBe(2);
+  });
+
+  it("records which Finish Tokens volunteer handed each token after rotation", () => {
+    const result = simulateFinishFunnel(
+      [
+        { timeSeconds: 0, position: 1 },
+        { timeSeconds: 0.5, position: 2 },
+        { timeSeconds: 1, position: 3 },
+        { timeSeconds: 1.5, position: 4 },
+      ],
+      {
+        tokensPerMinutePerVolunteer: 15,
+        volunteerCount: 2,
+        tokenSupplyBatchSize: 2,
+        tokenSupplyFetchDelaySeconds: 30,
+      },
+    );
+
+    expect(
+      result.finisherSchedules.map(
+        (schedule) => schedule.finishTokensVolunteerNumber,
+      ),
+    ).toEqual([1, 1, 2, 2]);
   });
 });

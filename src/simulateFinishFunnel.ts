@@ -77,6 +77,7 @@ export function simulateFinishFunnel(
       position: finisher.position,
       arrivalTimeSeconds: finisher.arrivalTimeSeconds,
       tokenHandoverTimeSeconds: timeSeconds,
+      finishTokensVolunteerNumber: volunteerPool.activeIndex + 1,
       estimated: finisher.estimated,
     });
     recordQueueDepth(timeSeconds);

@@ -18,6 +18,7 @@ export type FinisherSchedule = {
   position?: number;
   arrivalTimeSeconds: number;
   tokenHandoverTimeSeconds: number;
+  finishTokensVolunteerNumber?: number;
   estimated?: boolean;
 };
 
