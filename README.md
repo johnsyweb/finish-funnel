@@ -11,7 +11,7 @@ mise run setup
 aube run dev
 ```
 
-Open `http://localhost:5173`. Use the fixture selector to compare Bushy #1095 (record attendance) with Mernda #400 (quiet Saturday).
+Open `http://localhost:5173`. Use the fixture selector to compare Bushy #1095 (record attendance), Albert Melbourne #693 (busy local), and Mernda #400 (quiet Saturday).
 
 ```bash
 aube test
@@ -29,6 +29,7 @@ Bundled results fixtures live in `public/fixtures/`. Regenerate with `aube run b
 ```bash
 curl -fsSL -A "Mozilla/5.0" "https://www.parkrun.org.uk/bushy/results/1095/" -o /tmp/bushy1095.html
 curl -fsSL -A "Mozilla/5.0" "https://www.parkrun.com.au/mernda/results/400/" -o /tmp/mernda400.html
+curl -fsSL -A "Mozilla/5.0" "https://www.parkrun.com.au/albertmelbourne/results/2026-06-13/" -o /tmp/albertmelbourne20260613.html
 aube run build:fixtures
 ```
 
@@ -36,7 +37,7 @@ aube run build:fixtures
 
 - Finisher arrivals from published times (per-second, spread within each second)
 - Unknown finishers estimated from neighbours
-- Discrete token handover (default 15 tokens/min, 1 Finish Tokens volunteer)
+- Discrete token handover (default 15 tokens/min active volunteer); Finish Tokens volunteers rotate on token supply batch exhaustion; configurable batch size and fetch delay
 - Single-lane: recommended length = deceleration zone + peak queue × finisher spacing, rounded up to whole metres
 - Multi-lane: lane count and lane length inputs; combined capacity vs peak; lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured; finisher spacing clamped to lane queue zone; queue moment summary per lane at the selected moment; physical batch on every queue table row
 - Proposed funnel adequacy check in metres (single lane) or combined capacity (multi-lane)

@@ -16,5 +16,6 @@ Tracer-bullet vertical slices for queue visualisation. No GitHub remote yet — 
 | 10  | [Batch markers on chart timeline](./10-batch-markers-on-chart-timeline.md)              | 09         |
 | 11  | [Finish-line backup simulation](./11-finish-line-backup-simulation.md)                  | 10         |
 | 12  | [Queue moment summary and physical batch on every row](./12-queue-moment-summary.md)    | 11         |
+| 13  | [Finish Tokens rotation and token supply batches](./13-finish-tokens-rotation.md)       | 12         |
 
-After 12: userscript port, deploy (see `HANDOFF.md`).
+After 13: userscript port, deploy (see `HANDOFF.md`).

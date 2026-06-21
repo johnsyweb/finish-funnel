@@ -13,6 +13,7 @@ Test fixtures:
 
 - [Bushy #1095](https://www.parkrun.org.uk/bushy/results/1095/) — record stress case (1,564 finishers)
 - [Mernda #400](https://www.parkrun.com.au/mernda/results/400/) — quiet case
+- [Albert Melbourne #693](https://www.parkrun.com.au/albertmelbourne/results/2026-06-13/) — busy local case (662 finishers)
 
 ---
 
@@ -25,7 +26,7 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Topic                   | Decision                                                                                    |
 | ----------------------- | ------------------------------------------------------------------------------------------- |
 | Primary output          | Queue capacity (people) + derived physical length (metres)                                  |
-| Token handover          | Per-volunteer rate × headcount; role name **Finish Tokens**                                 |
+| Token handover          | Active volunteer rate; Finish Tokens rotation with token supply batches (see below)         |
 | Arrivals                | Per-second; co-timed finishers spread evenly within the second                              |
 | Unknown times           | Neighbour estimate (prev known, else next); port of tampermonkey `assignUnknownFinishTimes` |
 | Interaction             | Recommendation + proposed-funnel adequacy check                                             |
@@ -73,7 +74,18 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Batch marker timeline | Every batch marker moment on chart; orange tick + letter; click to select; Page Up/Down to jump                                                                                                                                                                                                                    |
 | Deferred              | —                                                                                                                                                                                                                                                                                                                  |
 
-Implementation issues: [`docs/issues/`](./docs/issues/) (#06–12)
+Implementation issues: [`docs/issues/`](./docs/issues/) (#06–13)
+
+### Finish Tokens rotation (done — 2026-06-21)
+
+| Topic              | Decision                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| Handover           | One **active** volunteer; rate not multiplied by pool size                                |
+| Rotation           | On token supply batch exhaustion only; round-robin pool                                   |
+| Token supply batch | Configurable size; fixture defaults Mernda 100, Albert Melbourne 30, Bushy 30             |
+| Fetch delay        | Configurable; default 30 s when no standby batch ready                                    |
+| Event start        | Every volunteer in pool starts ready with full batch                                      |
+| Gaps               | Increase peak queue depth and sizing; metrics show count and total pause; not on chart v1 |
 
 ---
 
@@ -81,13 +93,13 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–12)
 
 ### Done
 
-- **Domain modules** (115 tests):
+- **Domain modules** (132 tests):
   - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
   - `formatFinishClockTime`, `drawQueueDepthChart`
   - `orderFixturesForDisplay`, `attachCanvasResizeHandler`, `buildAppMarkup`
-- **Fixtures:** `public/fixtures/bushy-1095.json`, `public/fixtures/mernda-400.json`
+- **Fixtures:** `public/fixtures/bushy-1095.json`, `public/fixtures/mernda-400.json`, `public/fixtures/albert-melbourne-693.json`
 - **UI:** fixture selector (Mernda default), settings, metrics, adequacy, canvas chart with resize
 - **Tooling:** mise, aube, hk; eslint, prettier; `mise run check`
 - **Git:** atomic conventional commits on `main`
@@ -123,6 +135,12 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 - Per-lane utilisation and batch counts; finish-line blocked line when backup modelled
 - Event-wide batch marker card count in queue moment summary
 - Section heading `Queue at selected moment (N)`; physical batch on every queue table row
+
+### Finish Tokens rotation (done — 2026-06-21)
+
+- `finishTokensRotation`, token supply gap metrics in simulation and UI
+- Finish Tokens settings: batch size, fetch delay, rotation pool size
+- Albert Melbourne parkrun fixture (#693) with 2 × 200 m layout default
 
 ### Not done
 

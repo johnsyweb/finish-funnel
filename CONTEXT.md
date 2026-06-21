@@ -80,12 +80,28 @@ _Avoid_: Finish Token Support, token volunteer (too vague)
 Finish tokens are always handed out in strict finish position order (1, 2, 3, …), regardless of how many finish funnel lanes are in use. Multi-lane layouts do not create separate token batches.
 _Avoid_: Arrival order, lane order, batch order
 
+**Token supply batch**:
+A numbered set of finish tokens prepared for handover at the end of the finish funnel (e.g. 30 at Albert Melbourne parkrun, 100 at Mernda). Size is configurable in Finish Tokens settings; fixture selection sets a sensible default. Distinct from **physical batch** — token supply batches are how tokens are stored and carried, not how finishers are grouped in the funnel.
+_Avoid_: Token batch (ambiguous with physical batch), batch of tokens (too vague)
+
+**Token supply fetch delay**:
+How long handover pauses when the active volunteer’s token supply batch is exhausted and no standby volunteer has the next batch ready — while someone fetches the next batch. Configurable in Finish Tokens settings; default 30 seconds. Pauses increase peak queue depth and feed into funnel sizing recommendations.
+_Avoid_: Batch change time, refill delay (too vague)
+
+**Token supply gap**:
+A period during the event when no finish token is handed out because every volunteer in the rotation pool who could take over is waiting for a token supply batch (fetch in progress). Duration equals the token supply fetch delay when a gap occurs. Token supply gaps increase peak queue depth and appear in wait-time metrics. When gaps occurred, the UI shows gap count and total handover pause time in the metrics panel; hidden when there were none. Not shown on the queue depth chart in the first version.
+_Avoid_: Handover stall, batch break (ambiguous with physical batch)
+
+**Finish Tokens rotation**:
+Finish Tokens volunteers work in rotation: one **active** volunteer hands tokens one at a time at the configured rate; others wait on standby with the next token supply batch ready or fetch one. Rotation to the next volunteer occurs when the active volunteer’s token supply batch is exhausted — not mid-batch. The **volunteer count** is the rotation pool size: when the active batch is exhausted, the next volunteer in rotation who already has the next token supply batch ready takes over with no gap; if nobody has the next batch ready, handover pauses for the **token supply fetch delay**. Volunteers rotate in fixed order; when a volunteer leaves active handover they immediately begin fetching the next token supply batch and are ready again after the fetch delay. At event start every volunteer in the pool begins ready with a full token supply batch; only volunteer 1 is active. Rotation provides physical respite and covers token supply batch changes. Additional volunteers do not hand out in parallel.
+_Avoid_: Token team, volunteer pool (too vague)
+
 **Token handover rate**:
-How quickly finish tokens are handed out, modelled as tokens per minute per Finish Tokens volunteer multiplied by the number of volunteers in that role. Simulated as discrete events: one finisher leaves the queue every 60 ÷ total tokens-per-minute seconds while the queue is non-empty.
+How quickly the **active** Finish Tokens volunteer hands out tokens, modelled as tokens per minute for that one volunteer. Simulated as discrete events: one finisher leaves the queue every 60 ÷ tokens-per-minute seconds while the active volunteer is handing out and the queue is non-empty. Not multiplied by volunteer count.
 _Avoid_: Service rate (too generic), throughput (ambiguous with finisher arrival rate), continuous drain
 
 **Token handover time**:
-The simulated clock finish time at which a finisher receives a finish token, derived from finisher arrival and token handover rate. Used to compute time until token and total estimated queueing time.
+The simulated clock finish time at which a finisher receives a finish token, derived from finisher arrival, token handover rate, Finish Tokens rotation, and any token supply gaps. Used to compute time until token and total estimated queueing time.
 _Avoid_: Service time, departure time (too generic)
 
 **Finisher arrival**:
@@ -97,7 +113,7 @@ A finisher whose published result time is missing or unparseable. Assigned the p
 _Avoid_: Unknown time (describes the data, not the person), missing time
 
 **Proposed funnel**:
-A finish funnel layout entered by the event team to compare against the simulated peak queue: lane count and lane length in metres for each finish funnel lane. The tool derives combined lane capacity using deceleration zone and finisher spacing, then reports sufficiency with headroom or shortfall. Fixture selection sets sensible defaults (e.g. Bushy: 2 × 300 m).
+A finish funnel layout entered by the event team to compare against the simulated peak queue: lane count and lane length in metres for each finish funnel lane. The tool derives combined lane capacity using deceleration zone and finisher spacing, then reports sufficiency with headroom or shortfall. Fixture selection sets sensible defaults (e.g. Bushy: 2 × 300 m; Mernda: 1 × 30 m; Albert Melbourne: 2 × 200 m).
 _Avoid_: Current setup, existing funnel, proposed capacity
 
 **Event results**:
@@ -157,5 +173,5 @@ For a queued finisher at the selected moment, the full wait from finisher arriva
 _Avoid_: Total wait, queue duration (ambiguous with physical funnel length)
 
 **Finish Tokens settings**:
-The configurable token handover rate (tokens per minute per Finish Tokens volunteer) and number of Finish Tokens volunteers used in the simulation. Default: 15 tokens/min, 1 volunteer.
+The configurable token handover rate (tokens per minute for the active Finish Tokens volunteer), number of Finish Tokens volunteers in rotation, token supply batch size, and token supply fetch delay used in the simulation. Fixture selection sets sensible defaults for batch size (e.g. Mernda 100, Albert Melbourne 30, Bushy 30). Default handover rate: 15 tokens/min; default volunteers: 1; default fetch delay: 30 seconds.
 _Avoid_: Service settings, handover settings
