@@ -10,11 +10,15 @@ describe("analyzeFinishFunnel", () => {
         { position: 3, name: "", time: "23:00" },
         { position: 4, name: "", time: "23:01" },
       ],
+      laneCount: 1,
+      laneLengthMetres: 30,
     });
 
     expect(result.peakQueueDepth).toBeGreaterThan(2);
-    expect(result.recommendedLengthMetres).toBeGreaterThan(5);
     expect(result.funnelNotRequired).toBe(false);
+    expect(
+      result.proposedMultiLaneLayout?.minimumLanesRequired,
+    ).toBeGreaterThan(0);
   });
 
   it("reports a quiet event may not need a roped-off funnel", () => {
@@ -26,6 +30,8 @@ describe("analyzeFinishFunnel", () => {
     });
 
     expect(result.funnelNotRequired).toBe(true);
-    expect(result.recommendedLengthMetres).toBe(6);
+    expect(
+      result.proposedMultiLaneLayout?.minimumLanesRequired,
+    ).toBeUndefined();
   });
 });
