@@ -31,4 +31,12 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain('id="metrics"');
     expect(markup).toContain('aria-live="polite"');
   });
+
+  it("associates the chart with a keyboard-accessible selected moment control", () => {
+    const markup = buildAppMarkup();
+
+    expect(markup).toContain('id="chart-selected-moment"');
+    expect(markup).toContain('tabindex="0"');
+    expect(markup).toContain("arrow keys");
+  });
 });

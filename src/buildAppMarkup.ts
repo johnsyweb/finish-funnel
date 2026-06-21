@@ -60,8 +60,14 @@ export function buildAppMarkup(): string {
 
   <section class="panel">
     <h2>Queue depth over finish time</h2>
+    <p id="chart-selected-moment" class="chart-selected-moment" aria-live="polite"></p>
     <div class="chart-wrap" id="chart-wrap">
-      <canvas id="queue-chart" role="img" aria-label="Queue depth over finish time"></canvas>
+      <canvas
+        id="queue-chart"
+        tabindex="0"
+        role="img"
+        aria-label="Queue depth over finish time. Click or drag to choose a moment; use arrow keys when focused."
+      ></canvas>
     </div>
   </section>
 `;

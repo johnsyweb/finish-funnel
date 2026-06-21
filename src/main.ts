@@ -1,6 +1,12 @@
 import { analyzeFinishFunnel } from "./analyzeFinishFunnel";
 import { attachCanvasResizeHandler } from "./attachCanvasResizeHandler";
+import { attachChartMomentControls } from "./attachChartMomentControls";
 import { buildAppMarkup } from "./buildAppMarkup";
+import {
+  clampSelectedMoment,
+  timeRangeFromChartPoints,
+  type ChartTimeRange,
+} from "./chartMomentMapping";
 import { proposedFunnelQueueCapacity } from "./checkProposedFunnel";
 import {
   DEFAULT_DECELERATION_ZONE_METRES,
@@ -8,7 +14,9 @@ import {
   DEFAULT_FIXTURE_ID,
 } from "./defaults";
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
+import { formatFinishClockTime } from "./formatFinishClockTime";
 import { orderFixturesForDisplay } from "./orderFixturesForDisplay";
+import { firstMomentAtPeakQueueDepth } from "./queuedFinishersAtMoment";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
 
 type EventFixture = {
@@ -44,6 +52,9 @@ const proposedFunnelInput =
   document.querySelector<HTMLInputElement>("#proposed-funnel")!;
 const callout = document.querySelector<HTMLDivElement>("#callout")!;
 const metrics = document.querySelector<HTMLDivElement>("#metrics")!;
+const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
+  "#chart-selected-moment",
+)!;
 const chartCanvas = document.querySelector<HTMLCanvasElement>("#queue-chart")!;
 const chartWrap = document.querySelector<HTMLElement>("#chart-wrap")!;
 
@@ -54,6 +65,10 @@ for (const fixture of fixtures) {
   eventSelect.append(option);
 }
 eventSelect.value = DEFAULT_FIXTURE_ID;
+
+let selectedMomentSeconds = 0;
+let simulationStateKey = "";
+let chartTimeRange: ChartTimeRange = { minTimeSeconds: 0, maxTimeSeconds: 0 };
 
 function readNumberInput(input: HTMLInputElement, fallback: number): number {
   const value = Number(input.value);
@@ -68,7 +83,23 @@ function selectedFixture(): EventFixture {
   return fixture;
 }
 
-function render(): void {
+function currentSimulationStateKey(fixtureId: string): string {
+  return JSON.stringify({
+    fixtureId,
+    tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
+    volunteerCount: readNumberInput(volunteerCountInput, 1),
+    finisherSpacingMetres: readNumberInput(
+      finisherSpacingInput,
+      DEFAULT_FINISHER_SPACING_METRES,
+    ),
+    decelerationZoneMetres: readNumberInput(
+      decelerationZoneInput,
+      DEFAULT_DECELERATION_ZONE_METRES,
+    ),
+  });
+}
+
+function render(resetSelectedMoment = false): void {
   const fixture = selectedFixture();
   const finishTokensSettings = {
     tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
@@ -83,6 +114,7 @@ function render(): void {
     DEFAULT_DECELERATION_ZONE_METRES,
   );
   const proposedFunnelMetres = readNumberInput(proposedFunnelInput, 30);
+  const nextSimulationStateKey = currentSimulationStateKey(fixture.id);
 
   const result = analyzeFinishFunnel({
     finishers: fixture.finishers,
@@ -91,6 +123,22 @@ function render(): void {
     finisherSpacingMetres,
     proposedFunnelMetres,
   });
+
+  chartTimeRange = timeRangeFromChartPoints(result.queueDepthOverTime);
+  const peakMoment = firstMomentAtPeakQueueDepth(
+    result.queueDepthOverTime,
+    result.peakQueueDepth,
+  );
+
+  if (resetSelectedMoment || nextSimulationStateKey !== simulationStateKey) {
+    selectedMomentSeconds = peakMoment;
+    simulationStateKey = nextSimulationStateKey;
+  }
+
+  selectedMomentSeconds = clampSelectedMoment(
+    selectedMomentSeconds,
+    chartTimeRange,
+  );
 
   if (result.funnelNotRequired) {
     callout.hidden = false;
@@ -135,9 +183,12 @@ function render(): void {
     </div>
   `;
 
+  chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
+
   drawQueueDepthChart(chartCanvas, result.queueDepthOverTime, {
     peakQueueDepth: result.peakQueueDepth,
     proposedQueueCapacity,
+    selectedMomentSeconds,
   });
 }
 
@@ -146,12 +197,21 @@ for (const element of [
   volunteerCountInput,
   finisherSpacingInput,
   decelerationZoneInput,
-  proposedFunnelInput,
 ]) {
-  element.addEventListener("input", render);
+  element.addEventListener("input", () => render(true));
 }
-eventSelect.addEventListener("change", render);
+eventSelect.addEventListener("change", () => render(true));
+proposedFunnelInput.addEventListener("input", () => render());
 
-attachCanvasResizeHandler(chartWrap, render);
+attachCanvasResizeHandler(chartWrap, () => render());
+attachChartMomentControls({
+  canvas: chartCanvas,
+  getRange: () => chartTimeRange,
+  getMoment: () => selectedMomentSeconds,
+  onMomentChange: (momentSeconds) => {
+    selectedMomentSeconds = momentSeconds;
+    render();
+  },
+});
 
-render();
+render(true);

@@ -1,3 +1,8 @@
+import {
+  canvasXFromMomentSeconds,
+  CHART_TIME_PADDING,
+  timeRangeFromChartPoints,
+} from "./chartMomentMapping";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 
 export type QueueChartPoint = {
@@ -8,6 +13,7 @@ export type QueueChartPoint = {
 export type QueueChartOptions = {
   peakQueueDepth: number;
   proposedQueueCapacity?: number;
+  selectedMomentSeconds?: number;
 };
 
 export function drawQueueDepthChart(
@@ -25,12 +31,12 @@ export function drawQueueDepthChart(
   canvas.width = width;
   canvas.height = height;
 
-  const padding = { top: 16, right: 16, bottom: 36, left: 48 };
-  const plotWidth = width - padding.left - padding.right;
+  const padding = CHART_TIME_PADDING;
   const plotHeight = height - padding.top - padding.bottom;
+  const range = timeRangeFromChartPoints(points);
 
-  const minTime = points[0].timeSeconds;
-  const maxTime = points[points.length - 1].timeSeconds;
+  const minTime = range.minTimeSeconds;
+  const maxTime = range.maxTimeSeconds;
   const maxDepth = Math.max(
     options.peakQueueDepth,
     options.proposedQueueCapacity ?? 0,
@@ -38,8 +44,7 @@ export function drawQueueDepthChart(
   );
 
   const xForTime = (timeSeconds: number) =>
-    padding.left +
-    ((timeSeconds - minTime) / (maxTime - minTime || 1)) * plotWidth;
+    canvasXFromMomentSeconds(timeSeconds, width, range, padding);
   const yForDepth = (depth: number) =>
     padding.top + plotHeight - (depth / maxDepth) * plotHeight;
 
@@ -95,6 +100,24 @@ export function drawQueueDepthChart(
   context.lineTo(width - padding.right, peakY);
   context.stroke();
   context.setLineDash([]);
+
+  if (options.selectedMomentSeconds !== undefined) {
+    const selectedX = xForTime(options.selectedMomentSeconds);
+    const selectedLabel = formatFinishClockTime(options.selectedMomentSeconds);
+
+    context.strokeStyle = "#e8e8e8";
+    context.lineWidth = 2;
+    context.setLineDash([]);
+    context.beginPath();
+    context.moveTo(selectedX, padding.top);
+    context.lineTo(selectedX, height - padding.bottom);
+    context.stroke();
+
+    context.fillStyle = "#e8e8e8";
+    context.font = "12px sans-serif";
+    context.textAlign = "center";
+    context.fillText(selectedLabel, selectedX, padding.top - 4);
+  }
 
   context.fillStyle = "#b8b8c8";
   context.font = "12px sans-serif";
