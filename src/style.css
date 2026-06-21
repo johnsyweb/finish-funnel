@@ -148,6 +148,12 @@ select {
   color: var(--text);
 }
 
+.queue-batch-cards-needed {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .queue-moment-summary {
   display: grid;
   grid-template-columns: auto 1fr;
