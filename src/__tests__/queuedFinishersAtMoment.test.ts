@@ -158,7 +158,7 @@ describe("queuedFinishersAtMoment", () => {
     });
   });
 
-  it("includes lane and batch marker assignments for queued finishers", () => {
+  it("includes lane and physical batch assignments for queued finishers", () => {
     const momentSeconds = 18 * 60 + 30 + 1;
     const laneLengthMetres =
       DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
@@ -177,17 +177,20 @@ describe("queuedFinishersAtMoment", () => {
     expect(result.finishers[0]).toMatchObject({
       position: 1,
       lane: "1",
+      physicalBatch: "unnamed",
     });
-    expect(result.finishers[0]?.batchMarker).toBeUndefined();
+    expect(result.finishers[0]?.isBatchMarkerHolder).toBeUndefined();
     expect(result.finishers[1]).toMatchObject({
       position: 2,
       lane: "1",
+      physicalBatch: "unnamed",
     });
-    expect(result.finishers[1]?.batchMarker).toBeUndefined();
+    expect(result.finishers[1]?.isBatchMarkerHolder).toBeUndefined();
     expect(result.finishers[2]).toMatchObject({
       position: 3,
       lane: "2",
-      batchMarker: "A",
+      physicalBatch: "A",
+      isBatchMarkerHolder: true,
     });
   });
 

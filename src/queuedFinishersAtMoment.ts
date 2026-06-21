@@ -9,6 +9,11 @@ import {
   DEFAULT_FINISHER_SPACING_METRES,
 } from "./defaults";
 import { formatFinishClockTime } from "./formatFinishClockTime";
+import {
+  finishLineBlockedCountAtMoment,
+  queueMomentSummaryFromAssignments,
+  type QueueMomentSummary,
+} from "./queueMomentSummary";
 import { simulateFinishTokens } from "./simulateFinishTokens";
 import type { FinishTokensSettings } from "./types";
 
@@ -19,7 +24,8 @@ export type QueuedFinisherAtMoment = {
   name: string;
   publishedFinishTime: string;
   lane: string;
-  batchMarker?: string;
+  physicalBatch?: string;
+  isBatchMarkerHolder?: boolean;
   queuePosition: number;
   timeWaiting: string;
   timeUntilToken: string;
@@ -45,6 +51,7 @@ export type QueuedFinishersAtMomentResult = {
   selectedMomentSeconds: number;
   queueDepth: number;
   totalCount: number;
+  queueMomentSummary: QueueMomentSummary;
   finishers: QueuedFinisherAtMoment[];
 };
 
@@ -81,6 +88,17 @@ function formatLaneLabel(lane: number | "overflow"): string {
   return lane === "overflow" ? "Overflow" : String(lane);
 }
 
+function formatPhysicalBatchLabel(
+  physicalBatch: string | undefined,
+  laneCount: number,
+): string | undefined {
+  if (physicalBatch === undefined || laneCount <= 1) {
+    return undefined;
+  }
+
+  return physicalBatch === "unnamed" ? "unnamed" : physicalBatch;
+}
+
 export function queuedFinishersAtMoment(
   input: QueuedFinishersAtMomentInput,
 ): QueuedFinishersAtMomentResult {
@@ -98,9 +116,9 @@ export function queuedFinishersAtMoment(
     input.finishers.map((finisher) => [finisher.position, finisher]),
   );
 
-  const arrivals = buildFinisherArrivals(input.finishers);
+  const publishedArrivals = buildFinisherArrivals(input.finishers);
   const simulation = simulateFinishTokens({
-    arrivals,
+    arrivals: publishedArrivals,
     finishTokensSettings,
     laneCount,
     laneLengthMetres,
@@ -122,6 +140,26 @@ export function queuedFinishersAtMoment(
   const queuedAtMoment = simulation.finisherSchedules
     .filter((schedule) => isQueuedAtMoment(schedule, input.momentSeconds))
     .sort((left, right) => left.arrivalTimeSeconds - right.arrivalTimeSeconds);
+
+  const finishLineBlockedCount = simulation.finishLineBackupModelled
+    ? finishLineBlockedCountAtMoment({
+        publishedArrivals,
+        effectiveArrivals: simulation.effectiveArrivals,
+        momentSeconds: input.momentSeconds,
+      })
+    : undefined;
+
+  const queueMomentSummary = queueMomentSummaryFromAssignments({
+    queuedPositions: queuedAtMoment
+      .map((schedule) => schedule.position)
+      .filter((position): position is number => position !== undefined),
+    laneAssignments,
+    laneCount,
+    laneLengthMetres,
+    decelerationZoneMetres,
+    finisherSpacingMetres,
+    finishLineBlockedCount,
+  });
 
   let filtered = queuedAtMoment;
 
@@ -145,6 +183,7 @@ export function queuedFinishersAtMoment(
     selectedMomentSeconds: input.momentSeconds,
     queueDepth: queuedAtMoment.length,
     totalCount: filtered.length,
+    queueMomentSummary,
     finishers: page.map((schedule, index) => {
       const finisher = finisherByPosition.get(schedule.position ?? -1);
       if (!finisher) {
@@ -163,7 +202,11 @@ export function queuedFinishersAtMoment(
         name: finisher.name,
         publishedFinishTime: finisher.time,
         lane: formatLaneLabel(laneAssignment?.lane ?? "overflow"),
-        batchMarker: laneAssignment?.batchMarker,
+        physicalBatch: formatPhysicalBatchLabel(
+          laneAssignment?.physicalBatch,
+          laneCount,
+        ),
+        isBatchMarkerHolder: laneAssignment?.isBatchMarkerHolder,
         queuePosition: offset + index + 1,
         timeWaiting: formatQueueDuration(timeWaiting),
         timeUntilToken: formatQueueDuration(timeUntilToken),

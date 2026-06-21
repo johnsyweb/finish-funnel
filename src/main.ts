@@ -5,12 +5,15 @@ import { buildAppMarkup } from "./buildAppMarkup";
 import { buildMetricsMarkup } from "./buildMetricsMarkup";
 import {
   buildQueuePaginationMarkup,
-  buildQueueSummaryMarkup,
   buildQueueTableMarkup,
   parseQueueSearchFilter,
   QUEUE_PAGE_SIZE,
   queuePageCount,
 } from "./buildQueueVisualisationMarkup";
+import {
+  buildQueueMomentSummaryMarkup,
+  queueMomentHeading,
+} from "./buildQueueMomentSummaryMarkup";
 import {
   clampSelectedMoment,
   timeRangeFromChartPoints,
@@ -76,6 +79,9 @@ const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
 )!;
 const chartCanvas = document.querySelector<HTMLCanvasElement>("#queue-chart")!;
 const chartWrap = document.querySelector<HTMLElement>("#chart-wrap")!;
+const queueMomentHeadingElement = document.querySelector<HTMLHeadingElement>(
+  "#queue-moment-heading",
+)!;
 const queueSummaryMount = document.querySelector<HTMLDivElement>(
   "#queue-summary-mount",
 )!;
@@ -203,7 +209,12 @@ function renderQueueVisualisation(
     return;
   }
 
-  queueSummaryMount.innerHTML = buildQueueSummaryMarkup(queueResult.queueDepth);
+  queueMomentHeadingElement.textContent = queueMomentHeading(
+    queueResult.queueDepth,
+  );
+  queueSummaryMount.innerHTML = buildQueueMomentSummaryMarkup(
+    queueResult.queueMomentSummary,
+  );
   queueTableMount.innerHTML = buildQueueTableMarkup(queueResult.finishers);
   queuePaginationMount.innerHTML = buildQueuePaginationMarkup({
     pageIndex: queuePageIndex,

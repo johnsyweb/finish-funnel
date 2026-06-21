@@ -30,9 +30,18 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-export function buildQueueSummaryMarkup(queueDepth: number): string {
-  const label = queueDepth === 1 ? "finisher" : "finishers";
-  return `<p class="queue-summary">${queueDepth} ${label} in the queue at the selected moment.</p>`;
+function formatBatchCell(finisher: QueuedFinisherAtMoment): string {
+  if (finisher.physicalBatch === undefined) {
+    return "";
+  }
+
+  const batchLabel = escapeHtml(finisher.physicalBatch);
+
+  if (!finisher.isBatchMarkerHolder) {
+    return batchLabel;
+  }
+
+  return `<span class="queue-batch-holder">${batchLabel} <span class="queue-batch-card" aria-label="${batchLabel}, batch marker holder">card</span></span>`;
 }
 
 export function buildQueueTableMarkup(
@@ -53,7 +62,7 @@ export function buildQueueTableMarkup(
         <td>${escapeHtml(finisher.name)}${estimatedBadge}</td>
         <td>${escapeHtml(finisher.publishedFinishTime)}</td>
         <td>${escapeHtml(finisher.lane)}</td>
-        <td>${finisher.batchMarker ? escapeHtml(finisher.batchMarker) : ""}</td>
+        <td>${formatBatchCell(finisher)}</td>
         <td>${finisher.queuePosition}</td>
         <td>${finisher.timeWaiting}</td>
         <td>${finisher.timeUntilToken}</td>

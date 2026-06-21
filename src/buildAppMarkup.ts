@@ -80,7 +80,7 @@ export function buildAppMarkup(): string {
   </section>
 
   <section class="panel" id="queue-visualisation-panel">
-    <h2>Queue at selected moment</h2>
+    <h2 id="queue-moment-heading">Queue at selected moment</h2>
     <div id="queue-summary-mount" aria-live="polite"></div>
     <div class="field">
       <label for="queue-search">Search by name or finish position</label>

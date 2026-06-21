@@ -14,7 +14,8 @@ const sampleFinisher: QueuedFinisherAtMoment = {
   name: "Carmen PALMER",
   publishedFinishTime: "31:52",
   lane: "2",
-  batchMarker: "B",
+  physicalBatch: "B",
+  isBatchMarkerHolder: true,
   queuePosition: 1,
   timeWaiting: "0:02",
   timeUntilToken: "0:02",
@@ -68,14 +69,28 @@ describe("buildQueueTableMarkup", () => {
       "Queued finishers at the selected moment",
     );
     expect(markup).toContain("Carmen PALMER");
-    expect(markup).toContain(">B</td>");
+    expect(markup).toContain("queue-batch-card");
+    expect(markup).toContain("batch marker holder");
   });
 
-  it("leaves the batch cell blank when no batch marker applies", () => {
+  it("shows the physical batch without a card indicator for other finishers in the batch", () => {
     const markup = buildQueueTableMarkup([
       {
         ...sampleFinisher,
-        batchMarker: undefined,
+        isBatchMarkerHolder: false,
+      },
+    ]);
+
+    expect(markup).toContain(">B</td>");
+    expect(markup).not.toContain("queue-batch-card");
+  });
+
+  it("leaves the batch cell blank when no physical batch applies", () => {
+    const markup = buildQueueTableMarkup([
+      {
+        ...sampleFinisher,
+        physicalBatch: undefined,
+        isBatchMarkerHolder: undefined,
       },
     ]);
 
@@ -88,7 +103,8 @@ describe("buildQueueTableMarkup", () => {
       {
         ...sampleFinisher,
         lane: "Overflow",
-        batchMarker: undefined,
+        physicalBatch: undefined,
+        isBatchMarkerHolder: undefined,
       },
     ]);
 
