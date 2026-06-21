@@ -2,7 +2,12 @@ import {
   buildFinisherArrivals,
   type EventFinisherInput,
 } from "./analyzeFinishFunnel";
-import { DEFAULT_FINISH_TOKENS_SETTINGS } from "./defaults";
+import { assignFinisherLanes } from "./assignFinisherLanes";
+import {
+  DEFAULT_DECELERATION_ZONE_METRES,
+  DEFAULT_FINISH_TOKENS_SETTINGS,
+  DEFAULT_FINISHER_SPACING_METRES,
+} from "./defaults";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import { simulateFinishFunnel } from "./simulateFinishFunnel";
 import type { FinishTokensSettings } from "./types";
@@ -13,6 +18,8 @@ export type QueuedFinisherAtMoment = {
   position: number;
   name: string;
   publishedFinishTime: string;
+  lane: string;
+  batchMarker?: string;
   queuePosition: number;
   timeWaiting: string;
   timeUntilToken: string;
@@ -28,6 +35,10 @@ export type QueuedFinishersAtMomentInput = {
   limit?: number;
   nameFilter?: string;
   finishPositionFilter?: number;
+  laneCount?: number;
+  laneLengthMetres?: number;
+  decelerationZoneMetres?: number;
+  finisherSpacingMetres?: number;
 };
 
 export type QueuedFinishersAtMomentResult = {
@@ -66,20 +77,39 @@ function isQueuedAtMoment(
   );
 }
 
+function formatLaneLabel(lane: number | "overflow"): string {
+  return lane === "overflow" ? "Overflow" : String(lane);
+}
+
 export function queuedFinishersAtMoment(
   input: QueuedFinishersAtMomentInput,
 ): QueuedFinishersAtMomentResult {
   const finishTokensSettings =
     input.finishTokensSettings ?? DEFAULT_FINISH_TOKENS_SETTINGS;
+  const decelerationZoneMetres =
+    input.decelerationZoneMetres ?? DEFAULT_DECELERATION_ZONE_METRES;
+  const finisherSpacingMetres =
+    input.finisherSpacingMetres ?? DEFAULT_FINISHER_SPACING_METRES;
+  const laneCount = input.laneCount ?? 1;
+  const laneLengthMetres = input.laneLengthMetres ?? 30;
   const offset = input.offset ?? 0;
   const limit = input.limit ?? DEFAULT_PAGE_LIMIT;
   const finisherByPosition = new Map(
     input.finishers.map((finisher) => [finisher.position, finisher]),
   );
 
-  const simulation = simulateFinishFunnel(
-    buildFinisherArrivals(input.finishers),
-    finishTokensSettings,
+  const arrivals = buildFinisherArrivals(input.finishers);
+  const simulation = simulateFinishFunnel(arrivals, finishTokensSettings);
+  const laneAssignments = assignFinisherLanes({
+    arrivals,
+    finisherSchedules: simulation.finisherSchedules,
+    laneCount,
+    laneLengthMetres,
+    decelerationZoneMetres,
+    finisherSpacingMetres,
+  });
+  const laneByPosition = new Map(
+    laneAssignments.map((assignment) => [assignment.position, assignment]),
   );
 
   const queuedAtMoment = simulation.finisherSchedules
@@ -119,11 +149,14 @@ export function queuedFinishersAtMoment(
         schedule.tokenHandoverTimeSeconds - input.momentSeconds;
       const totalEstimatedQueueingTime =
         schedule.tokenHandoverTimeSeconds - schedule.arrivalTimeSeconds;
+      const laneAssignment = laneByPosition.get(finisher.position);
 
       return {
         position: finisher.position,
         name: finisher.name,
         publishedFinishTime: finisher.time,
+        lane: formatLaneLabel(laneAssignment?.lane ?? "overflow"),
+        batchMarker: laneAssignment?.batchMarker,
         queuePosition: offset + index + 1,
         timeWaiting: formatQueueDuration(timeWaiting),
         timeUntilToken: formatQueueDuration(timeUntilToken),

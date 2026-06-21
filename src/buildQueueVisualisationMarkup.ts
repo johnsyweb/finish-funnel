@@ -52,6 +52,8 @@ export function buildQueueTableMarkup(
         <td>${finisher.position}</td>
         <td>${escapeHtml(finisher.name)}${estimatedBadge}</td>
         <td>${escapeHtml(finisher.publishedFinishTime)}</td>
+        <td>${escapeHtml(finisher.lane)}</td>
+        <td>${finisher.batchMarker ? escapeHtml(finisher.batchMarker) : ""}</td>
         <td>${finisher.queuePosition}</td>
         <td>${finisher.timeWaiting}</td>
         <td>${finisher.timeUntilToken}</td>
@@ -68,6 +70,8 @@ export function buildQueueTableMarkup(
           <th scope="col">Finish position</th>
           <th scope="col">Name</th>
           <th scope="col">Finish time</th>
+          <th scope="col">Lane</th>
+          <th scope="col">Batch</th>
           <th scope="col">Queue position</th>
           <th scope="col">Time waiting</th>
           <th scope="col">Time until token</th>

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FINISH_TOKENS_SETTINGS } from "../defaults";
+import {
+  DEFAULT_DECELERATION_ZONE_METRES,
+  DEFAULT_FINISHER_SPACING_METRES,
+  DEFAULT_FINISH_TOKENS_SETTINGS,
+} from "../defaults";
 import {
   firstMomentAtPeakQueueDepth,
   queuedFinishersAtMoment,
@@ -39,6 +43,8 @@ describe("queuedFinishersAtMoment", () => {
         position: 1,
         name: "Alex SMITH",
         publishedFinishTime: "18:30",
+        lane: "1",
+        batchMarker: "A",
         queuePosition: 1,
         timeWaiting: "0:02",
         timeUntilToken: "0:02",
@@ -49,6 +55,7 @@ describe("queuedFinishersAtMoment", () => {
         position: 2,
         name: "Sam JONES",
         publishedFinishTime: "18:30",
+        lane: "1",
         queuePosition: 2,
         timeWaiting: "0:01",
         timeUntilToken: "0:06",
@@ -150,5 +157,66 @@ describe("queuedFinishersAtMoment", () => {
       publishedFinishTime: "Unknown",
       estimated: true,
     });
+  });
+
+  it("includes lane and batch marker assignments for queued finishers", () => {
+    const momentSeconds = 18 * 60 + 30 + 1;
+    const laneLengthMetres =
+      DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
+
+    const result = queuedFinishersAtMoment({
+      finishers: [
+        { position: 1, name: "First", time: "18:30" },
+        { position: 2, name: "Second", time: "18:30" },
+        { position: 3, name: "Third", time: "18:30" },
+      ],
+      momentSeconds,
+      laneCount: 2,
+      laneLengthMetres,
+    });
+
+    expect(result.finishers[0]).toMatchObject({
+      position: 1,
+      lane: "1",
+      batchMarker: "A",
+    });
+    expect(result.finishers[1]).toMatchObject({
+      position: 2,
+      lane: "1",
+    });
+    expect(result.finishers[1]?.batchMarker).toBeUndefined();
+    expect(result.finishers[2]).toMatchObject({
+      position: 3,
+      lane: "2",
+      batchMarker: "B",
+    });
+  });
+
+  it("shows overflow in the lane column when the proposed layout is full", () => {
+    const momentSeconds = 23 * 60 + 1;
+    const laneLengthMetres =
+      DEFAULT_DECELERATION_ZONE_METRES + 2 * DEFAULT_FINISHER_SPACING_METRES;
+
+    const result = queuedFinishersAtMoment({
+      finishers: [
+        { position: 1, name: "First", time: "23:00" },
+        { position: 2, name: "Second", time: "23:00" },
+        { position: 3, name: "Third", time: "23:00" },
+        { position: 4, name: "Fourth", time: "23:00" },
+        { position: 5, name: "Fifth", time: "23:00" },
+      ],
+      momentSeconds,
+      laneCount: 2,
+      laneLengthMetres,
+    });
+
+    const overflowFinisher = result.finishers.find(
+      (finisher) => finisher.position === 5,
+    );
+
+    expect(overflowFinisher).toMatchObject({
+      lane: "Overflow",
+    });
+    expect(overflowFinisher?.batchMarker).toBeUndefined();
   });
 });

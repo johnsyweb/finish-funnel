@@ -13,6 +13,8 @@ const sampleFinisher: QueuedFinisherAtMoment = {
   position: 1000,
   name: "Carmen PALMER",
   publishedFinishTime: "31:52",
+  lane: "2",
+  batchMarker: "B",
   queuePosition: 1,
   timeWaiting: "0:02",
   timeUntilToken: "0:02",
@@ -55,6 +57,8 @@ describe("buildQueueTableMarkup", () => {
       "Finish position",
       "Name",
       "Finish time",
+      "Lane",
+      "Batch",
       "Queue position",
       "Time waiting",
       "Time until token",
@@ -64,6 +68,31 @@ describe("buildQueueTableMarkup", () => {
       "Queued finishers at the selected moment",
     );
     expect(markup).toContain("Carmen PALMER");
+    expect(markup).toContain(">B</td>");
+  });
+
+  it("leaves the batch cell blank when no batch marker applies", () => {
+    const markup = buildQueueTableMarkup([
+      {
+        ...sampleFinisher,
+        batchMarker: undefined,
+      },
+    ]);
+
+    expect(markup).toContain(">2</td>");
+    expect(markup).not.toContain(">B</td>");
+  });
+
+  it("shows Overflow in the lane column without a batch letter", () => {
+    const markup = buildQueueTableMarkup([
+      {
+        ...sampleFinisher,
+        lane: "Overflow",
+        batchMarker: undefined,
+      },
+    ]);
+
+    expect(markup).toContain("Overflow");
   });
 
   it("shows an estimated badge for Unknown finish times", () => {
