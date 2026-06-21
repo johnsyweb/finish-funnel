@@ -13,16 +13,60 @@ The minimum number of finishers the funnel must be able to hold at peak without 
 _Avoid_: Funnel size (ambiguous with physical length), buffer
 
 **Physical funnel length**:
-The distance in metres that the finish funnel should occupy on the ground: deceleration zone plus queue capacity multiplied by finisher spacing. Recommended length is rounded up to the nearest whole metre for practical layout.
+The distance in metres that the finish funnel should occupy on the ground: deceleration zone plus queue capacity multiplied by finisher spacing. Recommended length is rounded up to the nearest whole metre for practical layout. For multi-lane layouts, each finish funnel lane has its own physical length and deceleration zone.
 _Avoid_: Funnel length alone (ambiguous without stating physical vs capacity)
 
+**Finish funnel lane**:
+One roped parallel section of the finish funnel. New finishers stay on the **current lane** while it has spare capacity; when it is full, the Funnel Manager switches to the lowest numbered lane with spare capacity (including a lane that has reopened after emptying). Each lane has its own physical length including a deceleration zone at the finish-line end.
+_Avoid_: Chute, corridor, batch (describes token grouping, not physical layout)
+
+**Batch marker card**:
+A card handed to the first finisher who starts a new batch in a finish funnel lane — when a lane is empty before their arrival, including when a lane reopens after emptying. Letters run **A**, **B**, **C**, … in batch-start order across the event. Lane switches are minimised: stay on the current lane until full before opening another batch. Only that finisher’s row shows the letter in the queue visualisation. Overflow finishers have no batch marker. Operational aid only; token handover order remains strict finish position order.
+_Avoid_: Batch token, lane card, separator card
+
+**Batch marker moment**:
+The finisher arrival time of a finisher who holds a batch marker card — the instant a new physical batch begins on the event timeline. Every batch marker moment for the simulated event is shown on the queue depth chart. On the chart, shown as a short vertical tick at that clock finish time with the batch letter only (no lane number) labelled above the plot in a distinct colour from the selected-moment indicator. Clicking a batch tick moves the selected moment to that instant.
+_Avoid_: Batch start time (informal), card time
+
+**Funnel Manager**:
+The volunteer who opens and closes finish funnel lanes as each lane fills or empties, and ensures the first finisher in each new batch receives a batch marker card. Lane switches are kept to a minimum to reduce stress and error.
+_Avoid_: Funnel marshal, lane manager
+
+**Finisher lane assignment**:
+The finish funnel lane a finisher enters at finisher arrival, determined by replaying arrivals and token handovers in time order: stay on the current lane while it has spare capacity; when full, switch to the lowest numbered lane with spare capacity. A new batch marker letter is issued only when the chosen lane is empty. Finishers who arrive when every lane is full are assigned **overflow**.
+_Avoid_: Lane at token, current lane (ambiguous with lane switching after arrival)
+
+**Overflow finisher**:
+A finisher whose finisher lane assignment is overflow: they arrived after every proposed finish funnel lane was full. Overflow means the queue would back over the finish line; in reality people cannot finish until they can cross the line and enter the funnel. This slice flags overflow but does not yet re-simulate delayed finisher arrivals when capacity is breached.
+_Avoid_: Unassigned, extra finisher, spillover
+
+**Finish-line backup**:
+When combined lane capacity is exceeded, the queue backs over the finish line and blocks new finishes until space frees. Not yet modelled in simulation — deferred to a later slice that adjusts finisher arrivals when the funnel is full.
+_Avoid_: Finish line congestion, gridlock
+
+**Lane queue capacity**:
+The number of finishers one finish funnel lane can hold: lane physical length minus deceleration zone, divided by finisher spacing, rounded down.
+_Avoid_: Lane size, lane length (ambiguous with metres)
+
+**Combined lane capacity**:
+The sum of lane queue capacity across all finish funnel lanes. Compared against peak queue depth to judge whether a multi-lane layout holds everyone at the busiest moment.
+_Avoid_: Total funnel capacity (ambiguous with single-lane queue capacity)
+
+**Minimum lanes required**:
+The smallest lane count at the configured lane length that provides enough combined lane capacity for peak queue depth: peak queue depth divided by lane queue capacity, rounded up. Shown instead of a single-lane recommended physical funnel length when using multi-lane layout inputs.
+_Avoid_: Recommended length (ambiguous with metres), lanes needed (informal)
+
 **Funnel not required**:
-When peak queue depth is at most 2 (fixed threshold), the page shows a callout that a roped-off funnel may not be needed for this event. Chart and numbers are still shown for context.
+When peak queue depth is at most 2 (fixed threshold), the page shows a callout that a roped-off funnel may not be needed for this event. Chart and numbers are still shown for context. Mutually exclusive with the finish-line backup warning.
 _Avoid_: No funnel, skip funnel (too imperative)
 
 **Finish Tokens**:
 The parkrun volunteer role responsible for handing a numbered finish token to each finisher in position order at the end of the finish funnel.
 _Avoid_: Finish Token Support, token volunteer (too vague)
+
+**Token handover order**:
+Finish tokens are always handed out in strict finish position order (1, 2, 3, …), regardless of how many finish funnel lanes are in use. Multi-lane layouts do not create separate token batches.
+_Avoid_: Arrival order, lane order, batch order
 
 **Token handover rate**:
 How quickly finish tokens are handed out, modelled as tokens per minute per Finish Tokens volunteer multiplied by the number of volunteers in that role. Simulated as discrete events: one finisher leaves the queue every 60 ÷ total tokens-per-minute seconds while the queue is non-empty.
@@ -41,7 +85,7 @@ A finisher whose published result time is missing or unparseable. Assigned the p
 _Avoid_: Unknown time (describes the data, not the person), missing time
 
 **Proposed funnel**:
-A finish funnel length in metres entered by the event team to compare against the simulated peak queue. The tool converts it to queue capacity using the current deceleration zone and finisher spacing settings, then reports whether it is sufficient with headroom or shortfall.
+A finish funnel layout entered by the event team to compare against the simulated peak queue: lane count and lane length in metres for each finish funnel lane. The tool derives combined lane capacity using deceleration zone and finisher spacing, then reports sufficiency with headroom or shortfall. Fixture selection sets sensible defaults (e.g. Bushy: 2 × 300 m).
 _Avoid_: Current setup, existing funnel, proposed capacity
 
 **Event results**:
@@ -65,7 +109,7 @@ The number of finishers waiting in the finish funnel for a finish token at a giv
 _Avoid_: Backlog (ambiguous with processing delays), queue length (ambiguous with physical length)
 
 **Selected moment**:
-The clock finish time chosen on the queue depth chart. Queue membership and per-finisher wait metrics are evaluated at this instant. Set by clicking or dragging on the chart; nudged with arrow keys when the chart has focus. Shown as a vertical indicator and readable clock time on the chart. Defaults to the first moment peak queue depth is reached; resets to that moment whenever simulation settings change.
+The clock finish time chosen on the queue depth chart. Queue membership and per-finisher wait metrics are evaluated at this instant. Set by clicking or dragging on the chart; nudged with arrow keys when the chart has focus; jumped to the previous or next batch marker moment with Page Up or Page Down when the chart has focus. Shown as a vertical indicator and readable clock time on the chart. Defaults to the first moment peak queue depth is reached; resets to that moment whenever simulation settings change. Changing proposed funnel lane layout does not reset the selected moment.
 _Avoid_: Scrub time, cursor time, selected time (ambiguous with published finish time)
 
 **Queued finisher**:
@@ -73,7 +117,7 @@ At the selected moment, a finisher who has already had a finisher arrival but ha
 _Avoid_: Waiting runner, person in queue (too informal)
 
 **Queue visualisation**:
-The UI shown at the selected moment: a summary of queue depth plus a paginated, keyboard-accessible table of queued finishers (front of queue first), 25 rows per page by default, with optional search by name or finish position. Each row shows finish position, name, published finish time, queue position, time waiting, time until token, and total estimated queueing time; Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
+The UI shown at the selected moment: a summary of queue depth plus a paginated, keyboard-accessible table of queued finishers (front of queue first), 25 rows per page by default, with optional search by name or finish position. Each row shows finish position, name, published finish time, lane (or Overflow), batch marker letter when applicable, queue position, time waiting, time until token, and total estimated queueing time; Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
 _Avoid_: Queue view, funnel map (ambiguous with capacity sizing)
 
 **Queue position**:
