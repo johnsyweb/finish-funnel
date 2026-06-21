@@ -1,4 +1,5 @@
 import { laneQueueCapacity } from "./multiLaneFunnel";
+import { physicalBatchLabelForIndex } from "./physicalBatchLabel";
 import type { FinisherArrival, FinisherSchedule } from "./types";
 
 export type FinisherLaneAssignment = {
@@ -74,6 +75,7 @@ export function assignFinisherLanes({
 
     const { arrival } = event;
     const position = arrival.position ?? -1;
+    const previousLane = currentLane;
     const lane = laneForNextArrival({
       currentLane,
       occupancy,
@@ -98,6 +100,12 @@ export function assignFinisherLanes({
     };
 
     if (laneCount > 1) {
+      if (previousLane !== undefined && lane !== previousLane) {
+        physicalBatch = physicalBatchLabelForIndex(nextNamedBatchIndex);
+        nextNamedBatchIndex += 1;
+        awaitingBatchMarkerHolder = true;
+      }
+
       assignment.physicalBatch = physicalBatch;
       if (awaitingBatchMarkerHolder) {
         assignment.isBatchMarkerHolder = true;
@@ -109,12 +117,6 @@ export function assignFinisherLanes({
     assignmentsByPosition.set(position, assignment);
     occupancy[lane - 1] += 1;
     currentLane = lane;
-
-    if (laneCount > 1 && occupancy[lane - 1] >= perLaneCapacity) {
-      physicalBatch = batchMarkerForIndex(nextNamedBatchIndex);
-      nextNamedBatchIndex += 1;
-      awaitingBatchMarkerHolder = true;
-    }
   }
 
   return [...assignmentsByPosition.values()].sort((left, right) => {
@@ -174,6 +176,15 @@ function lowestLaneWithCapacity(
   return undefined;
 }
 
-function batchMarkerForIndex(index: number): string {
-  return String.fromCodePoint("A".codePointAt(0)! + index);
+export function batchMarkerCardsNeededFromAssignments(
+  laneAssignments: FinisherLaneAssignment[],
+  laneCount: number,
+): number | undefined {
+  if (laneCount <= 1) {
+    return undefined;
+  }
+
+  return laneAssignments.filter(
+    (assignment) => assignment.batchMarker !== undefined,
+  ).length;
 }

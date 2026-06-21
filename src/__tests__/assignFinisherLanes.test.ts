@@ -174,6 +174,48 @@ describe("assignFinisherLanes", () => {
     ).toBe(true);
   });
 
+  it("does not advance the physical batch during steady-state turnover on the same lane", () => {
+    const turnoverCount = 20;
+    const arrivals: FinisherArrival[] = [
+      { timeSeconds: 0, position: 1 },
+      { timeSeconds: 1, position: 2 },
+      { timeSeconds: 2, position: 3 },
+      { timeSeconds: 3, position: 4 },
+      ...Array.from({ length: turnoverCount }, (_, index) => ({
+        timeSeconds: 10 + index,
+        position: 5 + index,
+      })),
+    ];
+    const finisherSchedules: FinisherSchedule[] = [
+      { position: 1, arrivalTimeSeconds: 0, tokenHandoverTimeSeconds: 100 },
+      { position: 2, arrivalTimeSeconds: 1, tokenHandoverTimeSeconds: 101 },
+      ...Array.from({ length: turnoverCount }, (_, index) => ({
+        position: 3 + index,
+        arrivalTimeSeconds: 2 + index,
+        tokenHandoverTimeSeconds: 10 + index,
+      })),
+    ];
+
+    const assignments = assignFinisherLanes({
+      arrivals,
+      finisherSchedules,
+      ...layoutSettings(),
+    });
+
+    const turnoverAssignments = assignments.filter(
+      (assignment) => (assignment.position ?? 0) >= 5,
+    );
+
+    expect(
+      turnoverAssignments.every(
+        (assignment) => assignment.physicalBatch === "A",
+      ),
+    ).toBe(true);
+    expect(
+      assignments.filter((assignment) => assignment.batchMarker !== undefined),
+    ).toHaveLength(1);
+  });
+
   it("assigns overflow when every lane is full at arrival time", () => {
     const arrivals: FinisherArrival[] = [
       { timeSeconds: 0, position: 1 },

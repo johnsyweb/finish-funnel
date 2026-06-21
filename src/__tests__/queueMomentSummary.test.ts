@@ -92,6 +92,7 @@ describe("queueMomentSummaryFromAssignments", () => {
       maxFinishers: 2,
       batches: [{ label: "A", count: 2 }],
     });
+    expect(summary.batchMarkerCardsNeeded).toBe(1);
   });
 
   it("omits batch nesting for a single lane", () => {
