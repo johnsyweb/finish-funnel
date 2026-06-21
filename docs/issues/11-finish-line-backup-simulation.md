@@ -15,12 +15,12 @@ When combined lane capacity is exceeded, finishers block at the finish line unti
 
 ## Acceptance criteria
 
-- [ ] Peak queue depth capped at combined lane capacity for insufficient layouts
-- [ ] Blocked finishers receive delayed effective arrival times
-- [ ] Token handover order remains strict finish position order
-- [ ] Lane assignment uses effective arrivals (no overflow when backup applies)
-- [ ] Finish-line backup warning callout hidden when backup is modelled
-- [ ] `mise run check` passes
+- [x] Peak queue depth capped at combined lane capacity for insufficient layouts
+- [x] Blocked finishers receive delayed effective arrival times
+- [x] Token handover order remains strict finish position order
+- [x] Lane assignment uses effective arrivals (no overflow when backup applies)
+- [x] Finish-line backup warning callout hidden when backup is modelled
+- [x] `mise run check` passes
 
 ## Blocked by
 

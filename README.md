@@ -38,7 +38,7 @@ aube run build:fixtures
 - Unknown finishers estimated from neighbours
 - Discrete token handover (default 15 tokens/min, 1 Finish Tokens volunteer)
 - Single-lane: recommended length = deceleration zone + peak queue × finisher spacing, rounded up to whole metres
-- Multi-lane: lane count and lane length inputs; combined capacity vs peak; lane assignment with batch marker cards on lane-fill switches
+- Multi-lane: lane count and lane length inputs; combined capacity vs peak; lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured
 - Proposed funnel adequacy check in metres (single lane) or combined capacity (multi-lane)
 - Queue visualisation at a selected moment on the chart timeline
 
