@@ -1,7 +1,7 @@
 # Handoff: Finish Funnel app
 
 **Date:** 2026-06-21  
-**Status:** v1 sizing app, queue visualisation, and multi-lane layout complete; finish-line backup not yet modelled; not deployed; no userscript yet
+**Status:** v1 sizing app, queue visualisation, multi-lane layout, and finish-line backup complete; not deployed; no userscript yet
 
 ---
 
@@ -62,17 +62,17 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 | Lane geometry         | Each lane: total metres incl. deceleration; lane queue capacity = `(length − deceleration) ÷ spacing`                                                                                                                                              |
 | Adequacy              | Combined lane capacity (sum) vs peak queue depth; minimum lanes required at configured lane length                                                                                                                                                 |
 | Lane assignment       | Stay on current lane until full; then lowest numbered lane with capacity; batch letters **A**, **B**, **C**, … only on **lane-fill switch** (not at event start or when a lane reopens empty); none when `laneCount === 1`; minimise lane switches |
-| Overflow              | After all lanes full; queue would back over finish line — **not yet modelled** (flag and warn only)                                                                                                                                                |
+| Overflow              | Without backup: after all lanes full; with finish-line backup modelled, admissions delay until a slot opens                                                                                                                                        |
 | UI inputs             | **Lane count** + **lane length (m)**; Bushy default 2 × 300 m; Mernda 1 × 30 m                                                                                                                                                                     |
 | Metrics               | Minimum lanes required replaces single-lane recommended metres                                                                                                                                                                                     |
 | Chart                 | Proposed capacity reference line → combined lane capacity                                                                                                                                                                                          |
-| Warnings              | Callout when combined capacity &lt; peak (mutually exclusive with funnel-not-required)                                                                                                                                                             |
+| Warnings              | Funnel-not-required callout when peak ≤ 2; finish-line backup warning only when layout configured without backup modelling                                                                                                                         |
 | Selected moment       | Lane layout changes do **not** reset selected moment                                                                                                                                                                                               |
 | Queue table           | **Lane** and sparse **Batch** columns                                                                                                                                                                                                              |
 | Batch marker timeline | Every batch marker moment on chart; orange tick + letter; click to select; Page Up/Down to jump                                                                                                                                                    |
-| Deferred              | **Finish-line backup** — blocked finisher arrivals when capacity breached                                                                                                                                                                          |
+| Deferred              | Finish-line backup delay metrics in UI                                                                                                                                                                                                             |
 
-Implementation issues: [`docs/issues/`](./docs/issues/) (#06–10)
+Implementation issues: [`docs/issues/`](./docs/issues/) (#06–11)
 
 ---
 
@@ -80,8 +80,8 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–10)
 
 ### Done
 
-- **Domain modules** (86 tests):
-  - `simulateFinishFunnel`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
+- **Domain modules** (91 tests):
+  - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
   - `formatFinishClockTime`, `drawQueueDepthChart`
@@ -99,7 +99,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–10)
 | Bushy #1095 | 1,564     | 1,042      | 3                 |
 | Mernda #400 | 80        | 3          | 1                 |
 
-_Bushy 2 × 300 m → combined capacity 786; shortfall 256 at peak._
+_Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-line backup modelled peak caps at 786._
 
 ### Multi-lane layout (done — 2026-06-21)
 
@@ -107,9 +107,15 @@ _Bushy 2 × 300 m → combined capacity 786; shortfall 256 at peak._
 - UI inputs, metrics, finish-line backup warning, combined capacity chart line
 - **Batch marker moments** on queue depth chart timeline (lane-fill switch only)
 
+### Finish-line backup (done — 2026-06-21)
+
+- `simulateFinishFunnel` optional `maxQueueDepth`; `simulateFinishTokens` wrapper
+- Capped simulation wired through `analyzeFinishFunnel` and `queuedFinishersAtMoment`
+- Finish-line backup warning hidden when backup is modelled
+
 ### Not done
 
-- Finish-line backup simulation (deferred)
+- Finish-line backup delay metrics in UI (deferred)
 - No deployment to johnsy.com
 - No tampermonkey-parkrun userscript integration
 
@@ -152,9 +158,9 @@ aube run build:fixtures   # needs /tmp/*.html from curl (see README)
 
 ## Suggested next steps (priority order)
 
-1. **Finish-line backup** — model blocked arrivals when combined capacity breached (issue #11)
-2. **Userscript** — port parser + APIs to tampermonkey-parkrun
-3. **Deploy** — johnsy.com hosting alongside other parkrun utilities
+1. **Userscript** — port parser + APIs to tampermonkey-parkrun
+2. **Deploy** — johnsy.com hosting alongside other parkrun utilities
+3. **Finish-line backup delay metrics** — optional UI for wait at finish line
 
 ---
 
