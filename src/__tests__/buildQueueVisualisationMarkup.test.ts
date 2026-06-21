@@ -2,24 +2,25 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  buildQueuePaginationMarkup,
-  buildQueueTableMarkup,
+  buildEventResultsTableMarkup,
   parseQueueSearchFilter,
-  queuePageCount,
 } from "../buildQueueVisualisationMarkup";
-import type { QueuedFinisherAtMoment } from "../queuedFinishersAtMoment";
+import type { EventResultAtMoment } from "../eventResultsAtMoment";
 
-const sampleFinisher: QueuedFinisherAtMoment = {
+const sampleFinisher: EventResultAtMoment = {
   position: 1000,
   name: "Carmen PALMER",
   publishedFinishTime: "31:52",
+  state: "queued",
+  status: "In queue",
   lane: "2",
   physicalBatch: "B",
   isBatchMarkerHolder: true,
-  queuePosition: 1,
+  queuePosition: "1",
   timeWaiting: "0:02",
   timeUntilToken: "0:02",
   totalEstimatedQueueingTime: "0:04",
+  finishTokensVolunteer: "",
   estimated: false,
 };
 
@@ -39,16 +40,12 @@ describe("parseQueueSearchFilter", () => {
   });
 });
 
-describe("queuePageCount", () => {
-  it("returns at least one page even when the queue is empty", () => {
-    expect(queuePageCount(0, 25)).toBe(1);
-    expect(queuePageCount(26, 25)).toBe(2);
-  });
-});
-
-describe("buildQueueTableMarkup", () => {
-  it("renders an accessible table with all queue columns", () => {
-    const markup = buildQueueTableMarkup([sampleFinisher]);
+describe("buildEventResultsTableMarkup", () => {
+  it("renders an accessible table with all event result columns", () => {
+    const markup = buildEventResultsTableMarkup([sampleFinisher], {
+      totalCount: 1,
+      visibleCount: 1,
+    });
     const document = new DOMParser().parseFromString(markup, "text/html");
     const headers = [...document.querySelectorAll("th")].map(
       (cell) => cell.textContent,
@@ -58,84 +55,78 @@ describe("buildQueueTableMarkup", () => {
       "Finish position",
       "Name",
       "Finish time",
+      "Status",
       "Lane",
       "Batch",
       "Queue position",
       "Time waiting",
       "Time until token",
       "Total estimated queueing time",
+      "Finish Tokens volunteer",
     ]);
     expect(document.querySelector("caption")?.textContent).toContain(
-      "Queued finishers at the selected moment",
+      "Event results at the selected moment",
     );
     expect(markup).toContain("Carmen PALMER");
+    expect(markup).toContain("In queue");
     expect(markup).toContain("queue-batch-card");
-    expect(markup).toContain("batch marker holder");
   });
 
-  it("shows the physical batch without a card indicator for other finishers in the batch", () => {
-    const markup = buildQueueTableMarkup([
-      {
-        ...sampleFinisher,
-        isBatchMarkerHolder: false,
-      },
-    ]);
+  it("shows Finish Tokens volunteer for tokened finishers", () => {
+    const markup = buildEventResultsTableMarkup(
+      [
+        {
+          ...sampleFinisher,
+          state: "tokened",
+          status: "",
+          queuePosition: "",
+          finishTokensVolunteer: "Finish Tokens 2",
+        },
+      ],
+      { totalCount: 1, visibleCount: 1 },
+    );
 
-    expect(markup).toContain(">B</td>");
-    expect(markup).not.toContain("queue-batch-card");
+    expect(markup).toContain("Finish Tokens 2");
   });
 
-  it("leaves the batch cell blank when no physical batch applies", () => {
-    const markup = buildQueueTableMarkup([
-      {
-        ...sampleFinisher,
-        physicalBatch: undefined,
-        isBatchMarkerHolder: undefined,
-      },
-    ]);
+  it("shows At finish line in the status column", () => {
+    const markup = buildEventResultsTableMarkup(
+      [
+        {
+          ...sampleFinisher,
+          state: "finish-line-blocked",
+          status: "At finish line",
+          lane: "",
+          queuePosition: "",
+        },
+      ],
+      { totalCount: 1, visibleCount: 1 },
+    );
 
-    expect(markup).toContain(">2</td>");
-    expect(markup).not.toContain(">B</td>");
-  });
-
-  it("shows Overflow in the lane column without a batch letter", () => {
-    const markup = buildQueueTableMarkup([
-      {
-        ...sampleFinisher,
-        lane: "Overflow",
-        physicalBatch: undefined,
-        isBatchMarkerHolder: undefined,
-      },
-    ]);
-
-    expect(markup).toContain("Overflow");
+    expect(markup).toContain("At finish line");
   });
 
   it("shows an estimated badge for Unknown finish times", () => {
-    const markup = buildQueueTableMarkup([
-      {
-        ...sampleFinisher,
-        publishedFinishTime: "Unknown",
-        estimated: true,
-      },
-    ]);
+    const markup = buildEventResultsTableMarkup(
+      [
+        {
+          ...sampleFinisher,
+          publishedFinishTime: "Unknown",
+          estimated: true,
+        },
+      ],
+      { totalCount: 1, visibleCount: 1 },
+    );
 
     expect(markup).toContain("Estimated");
   });
-});
 
-describe("buildQueuePaginationMarkup", () => {
-  it("renders keyboard-focusable previous and next page controls", () => {
-    const markup = buildQueuePaginationMarkup({
-      pageIndex: 1,
-      pageCount: 3,
-      pageSize: 25,
-      totalCount: 60,
+  it("summarises filtered rows in the caption", () => {
+    const markup = buildEventResultsTableMarkup([sampleFinisher], {
+      totalCount: 10,
+      visibleCount: 1,
     });
 
-    expect(markup).toContain('id="queue-prev-page"');
-    expect(markup).toContain('id="queue-next-page"');
-    expect(markup).toContain("Page 2 of 3");
-    expect(markup).toContain('aria-label="Queue pagination"');
+    expect(markup).toContain("1 of 10 finishers shown");
   });
 });

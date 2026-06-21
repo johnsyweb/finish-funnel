@@ -95,7 +95,6 @@ export function buildAppMarkup(): string {
       <input id="queue-search" type="search" autocomplete="off" />
     </div>
     <div id="queue-table-mount"></div>
-    <div id="queue-pagination-mount"></div>
   </section>
 `;
 }

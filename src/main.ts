@@ -4,11 +4,8 @@ import { attachChartMomentControls } from "./attachChartMomentControls";
 import { buildAppMarkup } from "./buildAppMarkup";
 import { buildMetricsMarkup } from "./buildMetricsMarkup";
 import {
-  buildQueuePaginationMarkup,
-  buildQueueTableMarkup,
+  buildEventResultsTableMarkup,
   parseQueueSearchFilter,
-  QUEUE_PAGE_SIZE,
-  queuePageCount,
 } from "./buildQueueVisualisationMarkup";
 import {
   buildQueueMomentSummaryMarkup,
@@ -33,10 +30,8 @@ import { fixtureTokenDefaults } from "./fixtureTokenDefaults";
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import { orderFixturesForDisplay } from "./orderFixturesForDisplay";
-import {
-  firstMomentAtPeakQueueDepth,
-  queuedFinishersAtMoment,
-} from "./queuedFinishersAtMoment";
+import { eventResultsAtMoment } from "./eventResultsAtMoment";
+import { firstMomentAtPeakQueueDepth } from "./eventResultsAtMoment";
 import { resolveCallout } from "./resolveCallout";
 import type { BatchMarkerMoment } from "./batchMarkerMoments";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
@@ -100,12 +95,6 @@ const queueSearchInput =
   document.querySelector<HTMLInputElement>("#queue-search")!;
 const queueTableMount =
   document.querySelector<HTMLDivElement>("#queue-table-mount")!;
-const queuePaginationMount = document.querySelector<HTMLDivElement>(
-  "#queue-pagination-mount",
-)!;
-const queueVisualisationPanel = document.querySelector<HTMLElement>(
-  "#queue-visualisation-panel",
-)!;
 
 for (const fixture of fixtures) {
   const option = document.createElement("option");
@@ -118,7 +107,6 @@ eventSelect.value = DEFAULT_FIXTURE_ID;
 let selectedMomentSeconds = 0;
 let simulationStateKey = "";
 let chartTimeRange: ChartTimeRange = { minTimeSeconds: 0, maxTimeSeconds: 0 };
-let queuePageIndex = 0;
 let batchMarkerMoments: BatchMarkerMoment[] = [];
 
 function readNumberInput(input: HTMLInputElement, fallback: number): number {
@@ -213,25 +201,16 @@ function renderQueueVisualisation(
   },
 ): void {
   const searchFilter = parseQueueSearchFilter(queueSearchInput.value);
-  const queueResult = queuedFinishersAtMoment({
+  const queueResult = eventResultsAtMoment({
     finishers: fixture.finishers,
     finishTokensSettings,
     momentSeconds: selectedMomentSeconds,
-    offset: queuePageIndex * QUEUE_PAGE_SIZE,
-    limit: QUEUE_PAGE_SIZE,
     laneCount: layout.laneCount,
     laneLengthMetres: layout.laneLengthMetres,
     decelerationZoneMetres: layout.decelerationZoneMetres,
     finisherSpacingMetres: layout.finisherSpacingMetres,
     ...searchFilter,
   });
-  const pageCount = queuePageCount(queueResult.totalCount, QUEUE_PAGE_SIZE);
-
-  if (queuePageIndex >= pageCount) {
-    queuePageIndex = Math.max(0, pageCount - 1);
-    renderQueueVisualisation(fixture, finishTokensSettings, layout);
-    return;
-  }
 
   queueMomentHeadingElement.textContent = queueMomentHeading(
     queueResult.queueDepth,
@@ -239,16 +218,16 @@ function renderQueueVisualisation(
   queueSummaryMount.innerHTML = buildQueueMomentSummaryMarkup(
     queueResult.queueMomentSummary,
   );
-  queueTableMount.innerHTML = buildQueueTableMarkup(queueResult.finishers);
-  queuePaginationMount.innerHTML = buildQueuePaginationMarkup({
-    pageIndex: queuePageIndex,
-    pageCount,
-    pageSize: QUEUE_PAGE_SIZE,
-    totalCount: queueResult.totalCount,
-  });
+  queueTableMount.innerHTML = buildEventResultsTableMarkup(
+    queueResult.finishers,
+    {
+      totalCount: queueResult.totalCount,
+      visibleCount: queueResult.visibleCount,
+    },
+  );
 }
 
-function render(resetSelectedMoment = false, resetQueuePage = false): void {
+function render(resetSelectedMoment = false): void {
   syncFinisherSpacingInput();
 
   const fixture = selectedFixture();
@@ -258,12 +237,6 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
   const laneCount = readNumberInput(laneCountInput, 1);
   const laneLengthMetres = readLaneLengthMetres();
   const nextSimulationStateKey = currentSimulationStateKey(fixture.id);
-
-  if (resetSelectedMoment || nextSimulationStateKey !== simulationStateKey) {
-    queuePageIndex = 0;
-  } else if (resetQueuePage) {
-    queuePageIndex = 0;
-  }
 
   const result = analyzeFinishFunnel({
     finishers: fixture.finishers,
@@ -356,24 +329,7 @@ eventSelect.addEventListener("change", () => {
   applyFixtureTokenDefaults(eventSelect.value);
   render(true);
 });
-queueSearchInput.addEventListener("input", () => render(false, true));
-
-queueVisualisationPanel.addEventListener("click", (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement)) {
-    return;
-  }
-
-  if (target.id === "queue-prev-page") {
-    queuePageIndex = Math.max(0, queuePageIndex - 1);
-    render();
-  }
-
-  if (target.id === "queue-next-page") {
-    queuePageIndex += 1;
-    render();
-  }
-});
+queueSearchInput.addEventListener("input", () => render());
 
 attachCanvasResizeHandler(chartWrap, () => render());
 attachChartMomentControls({
@@ -383,7 +339,6 @@ attachChartMomentControls({
   getBatchMarkerMoments: () => batchMarkerMoments,
   onMomentChange: (momentSeconds) => {
     selectedMomentSeconds = momentSeconds;
-    queuePageIndex = 0;
     render();
   },
 });
