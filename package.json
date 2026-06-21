@@ -1,0 +1,33 @@
+{
+  "name": "finish-funnel",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Size a parkrun finish funnel for orderly finish token handover",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write '**/*.{ts,json,css,html,md}'",
+    "format:check": "prettier --check '**/*.{ts,json,css,html,md}'",
+    "check": "aube run typecheck && aube test && aube run lint && aube run format:check",
+    "build:fixtures": "tsx scripts/build-fixtures.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.4",
+    "vite": "^7.3.3",
+    "vitest": "4.1.7"
+  }
+}
