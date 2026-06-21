@@ -1,4 +1,10 @@
 import { FUNNEL_NOT_REQUIRED_PEAK_QUEUE_DEPTH } from "./defaults";
+import {
+  advanceAfterTokenHandover,
+  createInitialVolunteerPool,
+  type TokenSupplyGapEvent,
+} from "./finishTokensRotation";
+import { tokenSupplyGapSummary } from "./tokenSupplyGapSummary";
 import type {
   FinisherArrival,
   FinisherSchedule,
@@ -25,9 +31,12 @@ export function simulateFinishFunnel(
     (left, right) => left.timeSeconds - right.timeSeconds,
   );
 
-  const tokensPerMinute =
-    settings.tokensPerMinutePerVolunteer * settings.volunteerCount;
-  const secondsPerToken = 60 / tokensPerMinute;
+  const secondsPerToken = 60 / settings.tokensPerMinutePerVolunteer;
+  const volunteerPool = createInitialVolunteerPool(
+    settings.volunteerCount,
+    settings.tokenSupplyBatchSize,
+  );
+  const tokenSupplyGapEvents: TokenSupplyGapEvent[] = [];
 
   const queue: QueuedFinisher[] = [];
   const effectiveArrivals: FinisherArrival[] = [];
@@ -39,6 +48,23 @@ export function simulateFinishFunnel(
 
   const recordQueueDepth = (timeSeconds: number) => {
     queueDepthOverTime.push({ timeSeconds, queueDepth: queue.length });
+  };
+
+  const scheduleNextHandover = (timeSeconds: number) => {
+    const { nextHandoverTimeSeconds, gap } = advanceAfterTokenHandover({
+      pool: volunteerPool,
+      timeSeconds,
+      batchSize: settings.tokenSupplyBatchSize,
+      fetchDelaySeconds: settings.tokenSupplyFetchDelaySeconds,
+      secondsPerToken,
+    });
+
+    if (gap !== undefined) {
+      tokenSupplyGapEvents.push(gap);
+    }
+
+    nextDepartureTime =
+      queue.length > 0 ? nextHandoverTimeSeconds : Number.POSITIVE_INFINITY;
   };
 
   const handTokenToFrontFinisher = (timeSeconds: number) => {
@@ -54,16 +80,12 @@ export function simulateFinishFunnel(
       estimated: finisher.estimated,
     });
     recordQueueDepth(timeSeconds);
+    scheduleNextHandover(timeSeconds);
   };
 
   const processDeparturesThrough = (timeSeconds: number) => {
     while (nextDepartureTime <= timeSeconds && queue.length > 0) {
       handTokenToFrontFinisher(nextDepartureTime);
-      if (queue.length > 0) {
-        nextDepartureTime += secondsPerToken;
-      } else {
-        nextDepartureTime = Number.POSITIVE_INFINITY;
-      }
     }
   };
 
@@ -110,9 +132,6 @@ export function simulateFinishFunnel(
 
   while (queue.length > 0) {
     handTokenToFrontFinisher(nextDepartureTime);
-    if (queue.length > 0) {
-      nextDepartureTime += secondsPerToken;
-    }
   }
 
   return {
@@ -121,5 +140,6 @@ export function simulateFinishFunnel(
     funnelNotRequired: peakQueueDepth <= FUNNEL_NOT_REQUIRED_PEAK_QUEUE_DEPTH,
     finisherSchedules,
     effectiveArrivals,
+    tokenSupplyGaps: tokenSupplyGapSummary(tokenSupplyGapEvents),
   };
 }

@@ -98,6 +98,49 @@ describe("simulateFinishFunnel", () => {
     ]);
   });
 
+  it("records token supply gaps when the active volunteer must fetch a batch", () => {
+    const result = simulateFinishFunnel(
+      [
+        { timeSeconds: 0, position: 1 },
+        { timeSeconds: 1, position: 2 },
+        { timeSeconds: 2, position: 3 },
+      ],
+      {
+        tokensPerMinutePerVolunteer: 15,
+        volunteerCount: 1,
+        tokenSupplyBatchSize: 2,
+        tokenSupplyFetchDelaySeconds: 30,
+      },
+    );
+
+    expect(result.tokenSupplyGaps).toEqual({
+      gapCount: 1,
+      totalPauseSeconds: 30,
+    });
+  });
+
+  it("increases peak queue depth when handover pauses for a token supply gap", () => {
+    const arrivals = Array.from({ length: 20 }, (_, index) => ({
+      timeSeconds: index,
+      position: index + 1,
+    }));
+    const smallBatchSettings = {
+      tokensPerMinutePerVolunteer: 15,
+      volunteerCount: 1,
+      tokenSupplyBatchSize: 2,
+      tokenSupplyFetchDelaySeconds: 30,
+    };
+    const largeBatchSettings = {
+      ...smallBatchSettings,
+      tokenSupplyBatchSize: 100,
+    };
+
+    const withGaps = simulateFinishFunnel(arrivals, smallBatchSettings);
+    const withoutGaps = simulateFinishFunnel(arrivals, largeBatchSettings);
+
+    expect(withGaps.peakQueueDepth).toBeGreaterThan(withoutGaps.peakQueueDepth);
+  });
+
   it("does not loop forever when maxQueueDepth is zero", () => {
     const result = simulateFinishFunnel(
       [

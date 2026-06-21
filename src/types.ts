@@ -1,3 +1,5 @@
+import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
+
 export type FinisherArrival = {
   /** Seconds from event start (first finisher crossing). */
   timeSeconds: number;
@@ -8,6 +10,8 @@ export type FinisherArrival = {
 export type FinishTokensSettings = {
   tokensPerMinutePerVolunteer: number;
   volunteerCount: number;
+  tokenSupplyBatchSize: number;
+  tokenSupplyFetchDelaySeconds: number;
 };
 
 export type FinisherSchedule = {
@@ -23,4 +27,5 @@ export type SimulationResult = {
   funnelNotRequired: boolean;
   finisherSchedules: FinisherSchedule[];
   effectiveArrivals: FinisherArrival[];
+  tokenSupplyGaps?: TokenSupplyGapSummary;
 };

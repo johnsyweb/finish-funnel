@@ -3,6 +3,8 @@ import type { FinishTokensSettings } from "./types";
 export const DEFAULT_FINISH_TOKENS_SETTINGS: FinishTokensSettings = {
   tokensPerMinutePerVolunteer: 15,
   volunteerCount: 1,
+  tokenSupplyBatchSize: 100,
+  tokenSupplyFetchDelaySeconds: 30,
 };
 
 export const DEFAULT_FINISHER_SPACING_METRES = 0.75;
