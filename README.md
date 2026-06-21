@@ -38,9 +38,8 @@ aube run build:fixtures
 - Finisher arrivals from published times (per-second, spread within each second)
 - Unknown finishers estimated from neighbours
 - Discrete token handover (default 15 tokens/min active volunteer); Finish Tokens volunteers rotate on token supply batch exhaustion; configurable batch size and fetch delay
-- Single-lane: recommended length = deceleration zone + peak queue × finisher spacing, rounded up to whole metres
-- Multi-lane: lane count and lane length inputs; combined capacity vs peak; lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured; finisher spacing clamped to lane queue zone; queue moment summary per lane at the selected moment; complete event results table at selected moment (every finisher, row states, Finish Tokens volunteer)
-- Proposed funnel adequacy check in metres (single lane) or combined capacity (multi-lane)
-- Queue visualisation at a selected moment on the chart timeline: queue moment summary plus scrollable event results table with optional search
+- **Site constraints** (maximum lane length, maximum lane count) drive **recommended funnel layout**; proposed funnel pre-filled for simulation and what-if comparison
+- Multi-lane: lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured; queue moment summary and complete event results table at selected moment
+- Chart capacity reference lines for recommended layout; proposed layout when it differs
 
 See `CONTEXT.md` for domain language.

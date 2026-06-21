@@ -17,7 +17,7 @@ The distance in metres that the finish funnel should occupy on the ground: decel
 _Avoid_: Funnel length alone (ambiguous without stating physical vs capacity)
 
 **Finish funnel lane**:
-One roped parallel section of the finish funnel. New finishers stay on the **current lane** while it has spare capacity; when it is full, the Funnel Manager switches to the lowest numbered lane with spare capacity (including a lane that has reopened after emptying). Each lane has its own physical length including a deceleration zone at the finish-line end.
+One roped parallel section of the finish funnel, single-file and only wide enough for one finisher — no overtaking. New finishers stay on the **current lane** while it has spare capacity; when it is full, the Funnel Manager switches to the lowest numbered lane with spare capacity (including a lane that has reopened after emptying). Each lane has its own physical length including a deceleration zone at the finish-line end.
 _Avoid_: Chute, corridor, batch (describes token grouping, not physical layout)
 
 **Physical batch**:
@@ -61,11 +61,11 @@ The number of finishers one finish funnel lane can hold: lane physical length mi
 _Avoid_: Lane size, lane length (ambiguous with metres)
 
 **Combined lane capacity**:
-The sum of lane queue capacity across all finish funnel lanes. Compared against peak queue depth to judge whether a multi-lane layout holds everyone at the busiest moment.
+The sum of lane queue capacity across all finish funnel lanes. Compared against peak queue depth to judge whether a multi-lane layout holds everyone at the busiest moment. Shown on the queue depth chart as a horizontal capacity reference line for the **recommended funnel layout**; a second line for the **proposed funnel** appears only when its combined lane capacity differs from the recommendation.
 _Avoid_: Total funnel capacity (ambiguous with single-lane queue capacity)
 
 **Minimum lanes required**:
-The smallest lane count at the configured lane length that provides enough combined lane capacity for peak queue depth: peak queue depth divided by lane queue capacity, rounded up. Shown instead of a single-lane recommended physical funnel length when using multi-lane layout inputs.
+The smallest lane count at a given per-lane length that provides enough combined lane capacity for peak queue depth: peak queue depth divided by lane queue capacity, rounded up. Used internally when computing the **recommended funnel layout**; not shown as a separate metric when the recommendation is displayed directly.
 _Avoid_: Recommended length (ambiguous with metres), lanes needed (informal)
 
 **Funnel not required**:
@@ -112,8 +112,24 @@ _Avoid_: Finish time (ambiguous with published result time), crossing (too vague
 A finisher whose published result time is missing or unparseable. Assigned the previous known finish time in finish order, or the next known time if none precedes them. Still counts as a finisher arrival; flagged as estimated in the UI.
 _Avoid_: Unknown time (describes the data, not the person), missing time
 
+**Site constraints**:
+The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **recommended funnel layout**. Fixture selection sets sensible defaults per course and resets both values when the fixture changes. Changing site constraints, simulation settings, or fixture recomputes the recommendation and re-syncs the **proposed funnel** to match (discarding any what-if override).
+_Avoid_: Course limits (too vague), venue settings
+
+**Maximum lane length**:
+The longest total roped length per finish funnel lane the course can accommodate with stakes and cordons — from the finish line to the token handover point, **including** the deceleration zone at the finish-line end. A hard site constraint; the model's recommended per-lane length must not exceed this value. Fixture selection sets a sensible default per course (e.g. Bushy: 300 m; Albert Melbourne: 200 m; Mernda: 30 m).
+_Avoid_: Lane length (ambiguous with recommended or configured length), available space (too vague), queue zone length (excludes deceleration)
+
+**Maximum lane count**:
+The most parallel finish funnel lanes the course can physically accommodate along the available roping distance — a hard site constraint. The model's recommended lane count must not exceed this limit. Fixture selection sets a sensible default per course (e.g. Bushy: 3; Albert Melbourne: 2; Mernda: 1).
+_Avoid_: Lane limit (too informal), max lanes (ambiguous with recommended lane count)
+
+**Recommended funnel layout**:
+The finish funnel layout the model recommends for the simulated event: a lane count and total per-lane physical length (including deceleration zone) that hold peak queue depth without finish-line backup, subject to **maximum lane length** and **maximum lane count**. Chosen by taking the fewest lanes that fit within both constraints, then the shortest per-lane length (rounded up to whole metres) that still provides enough combined capacity — not necessarily the full maximum lane length when less rope suffices. When peak queue depth cannot be held even at maximum lane count and maximum lane length, the recommendation uses both maxima and the shortfall is stated explicitly. When **funnel not required** applies, still recommends one lane at the shortest length that holds peak queue depth.
+_Avoid_: Optimal layout, suggested setup (too vague)
+
 **Proposed funnel**:
-A finish funnel layout entered by the event team to compare against the simulated peak queue: lane count and lane length in metres for each finish funnel lane. The tool derives combined lane capacity using deceleration zone and finisher spacing, then reports sufficiency with headroom or shortfall. Fixture selection sets sensible defaults (e.g. Bushy: 2 × 300 m; Mernda: 1 × 30 m; Albert Melbourne: 2 × 200 m).
+A finish funnel layout used to simulate and compare against the simulated peak queue: lane count and total per-lane physical length in metres (including deceleration zone). Pre-filled from the **recommended funnel layout**; the event team may override either value to explore what-if alternatives within **site constraints** (lane count and length cannot exceed the configured maximums). The tool derives combined lane capacity using deceleration zone and finisher spacing, then reports sufficiency with headroom or shortfall. Drives queue visualisation; a capacity reference line on the queue depth chart appears only when proposed combined lane capacity differs from the recommendation.
 _Avoid_: Current setup, existing funnel, proposed capacity
 
 **Event results**:
@@ -125,11 +141,11 @@ One finisher’s published entry from the event results table: finish position, 
 _Avoid_: Result line, table row (too generic without “results”)
 
 **Finisher spacing**:
-The assumed distance in metres each finisher occupies in a single-lane finish funnel. Configurable; default 0.75 m. Used to derive the queue portion of physical funnel length from queue capacity.
-_Avoid_: Metres per person (too informal), lane density
+The assumed along-lane distance in metres each finisher occupies in a single-file finish funnel lane. Configurable; default 0.75 m. Used to derive the queue portion of physical funnel length from queue capacity. Lane width is not modelled separately — finish funnel lanes are single-file with no overtaking.
+_Avoid_: Metres per person (too informal), lane density, lane width
 
 **Deceleration zone**:
-A fixed length in metres at the finish-line end of the finish funnel, where fast finishers slow to walking pace after crossing the finish line. Added to physical funnel length but not to queue capacity. Default: 5 m.
+The length in metres at the finish-line end of each finish funnel lane, where fast finishers slow to walking pace after crossing the finish line. Configurable; default 5 m. Added to physical funnel length but not to queue capacity.
 _Avoid_: Run-off area, slowing distance
 
 **Queue depth**:

@@ -94,7 +94,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–13)
 
 ### Done
 
-- **Domain modules** (133 tests):
+- **Domain modules** (143 tests):
   - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
@@ -143,6 +143,16 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 - `formatFinishTokensVolunteerLabel`; `finishTokensVolunteerNumber` on each token handover in sim
 - Complete scrollable table replaces paginated queued-only table; search filters visible rows
 - Status column: **At finish line**, **In queue**, or blank; Finish Tokens volunteer on tokened rows
+
+### Site constraints and recommended layout (done — 2026-06-21)
+
+- **Site constraints** inputs: maximum lane length (total incl. deceleration), maximum lane count
+- `recommendFunnelLayout` outputs recommended lane count and per-lane length with explicit adequacy
+- **Layout assumptions**: deceleration zone, finisher spacing (single-file lanes)
+- **Proposed funnel** pre-filled from recommendation, clamped to site constraints, re-syncs on settings change
+- Metrics show recommended layout; proposed adequacy only when what-if differs
+- Chart: recommended capacity reference line; proposed line only when different
+- Peak queue capacity from uncapped simulation
 
 ### Finish Tokens rotation (done — 2026-06-21)
 
