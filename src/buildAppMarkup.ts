@@ -2,7 +2,11 @@ import {
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISH_TOKENS_SETTINGS,
   DEFAULT_FINISHER_SPACING_METRES,
+  DEFAULT_FIXTURE_ID,
 } from "./defaults";
+import { fixtureLayoutDefaults } from "./fixtureLayoutDefaults";
+
+const defaultLayout = fixtureLayoutDefaults(DEFAULT_FIXTURE_ID);
 
 export function buildAppMarkup(): string {
   return `
@@ -10,7 +14,7 @@ export function buildAppMarkup(): string {
 
   <header>
     <h1>Finish Funnel</h1>
-    <p>Size a single-lane finish funnel so Finish Tokens can be handed out in order.</p>
+    <p>Size a finish funnel so Finish Tokens can be handed out in position order.</p>
   </header>
 
   <div id="main-controls">
@@ -47,8 +51,12 @@ export function buildAppMarkup(): string {
           <input id="deceleration-zone" type="number" min="0" step="0.5" value="${DEFAULT_DECELERATION_ZONE_METRES}" />
         </div>
         <div class="field">
-          <label for="proposed-funnel">Proposed funnel (m)</label>
-          <input id="proposed-funnel" type="number" min="0" step="1" value="30" />
+          <label for="lane-count">Lane count</label>
+          <input id="lane-count" type="number" min="1" step="1" value="${defaultLayout.laneCount}" />
+        </div>
+        <div class="field">
+          <label for="lane-length">Lane length (m)</label>
+          <input id="lane-length" type="number" min="0" step="1" value="${defaultLayout.laneLengthMetres}" />
         </div>
       </fieldset>
     </section>
@@ -66,7 +74,7 @@ export function buildAppMarkup(): string {
         id="queue-chart"
         tabindex="0"
         role="img"
-        aria-label="Queue depth over finish time. Click or drag to choose a moment; use arrow keys when focused."
+        aria-label="Queue depth over finish time. Click or drag to choose a moment; use arrow keys when focused; use Page Up and Page Down to jump between batch marker moments."
       ></canvas>
     </div>
   </section>

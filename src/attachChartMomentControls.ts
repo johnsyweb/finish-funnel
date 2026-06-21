@@ -1,4 +1,9 @@
 import {
+  adjacentBatchMarkerMoment,
+  batchMarkerMomentAtClientX,
+  type BatchMarkerMoment,
+} from "./batchMarkerMoments";
+import {
   momentSecondsFromClientX,
   nudgeSelectedMoment,
   type ChartTimeRange,
@@ -8,6 +13,7 @@ export type AttachChartMomentControlsInput = {
   canvas: HTMLCanvasElement;
   getRange: () => ChartTimeRange;
   getMoment: () => number;
+  getBatchMarkerMoments: () => BatchMarkerMoment[];
   onMomentChange: (momentSeconds: number) => void;
 };
 
@@ -15,12 +21,22 @@ export function attachChartMomentControls({
   canvas,
   getRange,
   getMoment,
+  getBatchMarkerMoments,
   onMomentChange,
 }: AttachChartMomentControlsInput): () => void {
   let dragging = false;
 
   const updateFromClientX = (clientX: number) => {
-    onMomentChange(momentSecondsFromClientX(clientX, canvas, getRange()));
+    const batchMoment = batchMarkerMomentAtClientX(
+      clientX,
+      canvas,
+      getRange(),
+      getBatchMarkerMoments(),
+    );
+
+    onMomentChange(
+      batchMoment ?? momentSecondsFromClientX(clientX, canvas, getRange()),
+    );
   };
 
   const onPointerDown = (event: MouseEvent) => {
@@ -41,6 +57,22 @@ export function attachChartMomentControls({
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "PageUp" || event.key === "PageDown") {
+      event.preventDefault();
+      const direction = event.key === "PageDown" ? "next" : "previous";
+      const adjacent = adjacentBatchMarkerMoment(
+        getMoment(),
+        getBatchMarkerMoments(),
+        direction,
+      );
+
+      if (adjacent !== undefined) {
+        onMomentChange(adjacent);
+      }
+
+      return;
+    }
+
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
       return;
     }

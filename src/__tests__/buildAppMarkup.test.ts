@@ -38,6 +38,7 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain('id="chart-selected-moment"');
     expect(markup).toContain('tabindex="0"');
     expect(markup).toContain("arrow keys");
+    expect(markup).toContain("Page Up");
   });
 
   it("includes a searchable queue visualisation region", () => {
@@ -46,5 +47,14 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain('id="queue-visualisation-panel"');
     expect(markup).toContain('id="queue-search"');
     expect(markup).toContain("Search by name or finish position");
+  });
+
+  it("includes multi-lane proposed layout inputs", () => {
+    const markup = buildAppMarkup();
+
+    expect(markup).toContain('id="lane-count"');
+    expect(markup).toContain('id="lane-length"');
+    expect(markup).toContain("Lane count");
+    expect(markup).toContain("Lane length (m)");
   });
 });

@@ -3,6 +3,7 @@ import {
   CHART_TIME_PADDING,
   timeRangeFromChartPoints,
 } from "./chartMomentMapping";
+import type { BatchMarkerMoment } from "./batchMarkerMoments";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 
 export type QueueChartPoint = {
@@ -14,6 +15,7 @@ export type QueueChartOptions = {
   peakQueueDepth: number;
   proposedQueueCapacity?: number;
   selectedMomentSeconds?: number;
+  batchMarkerMoments?: BatchMarkerMoment[];
 };
 
 export function drawQueueDepthChart(
@@ -100,6 +102,24 @@ export function drawQueueDepthChart(
   context.lineTo(width - padding.right, peakY);
   context.stroke();
   context.setLineDash([]);
+
+  if (options.batchMarkerMoments !== undefined) {
+    for (const marker of options.batchMarkerMoments) {
+      const markerX = xForTime(marker.momentSeconds);
+
+      context.strokeStyle = "#ffa300";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(markerX, padding.top);
+      context.lineTo(markerX, height - padding.bottom);
+      context.stroke();
+
+      context.fillStyle = "#ffa300";
+      context.font = "12px sans-serif";
+      context.textAlign = "center";
+      context.fillText(marker.letter, markerX, padding.top - 4);
+    }
+  }
 
   if (options.selectedMomentSeconds !== undefined) {
     const selectedX = xForTime(options.selectedMomentSeconds);
