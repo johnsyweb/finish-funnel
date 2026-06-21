@@ -101,7 +101,7 @@ How quickly the **active** Finish Tokens volunteer hands out tokens, modelled as
 _Avoid_: Service rate (too generic), throughput (ambiguous with finisher arrival rate), continuous drain
 
 **Token handover time**:
-The simulated clock finish time at which a finisher receives a finish token, derived from finisher arrival, token handover rate, Finish Tokens rotation, and any token supply gaps. Used to compute time until token and total estimated queueing time.
+The simulated clock finish time at which a finisher receives a finish token, derived from finisher arrival, token handover rate, Finish Tokens rotation, and any token supply gaps. Used to compute time until token and total estimated queueing time. Each handover records which volunteer in the Finish Tokens rotation pool handed the token.
 _Avoid_: Service time, departure time (too generic)
 
 **Finisher arrival**:
@@ -141,20 +141,36 @@ The clock finish time chosen on the queue depth chart. Queue membership and per-
 _Avoid_: Scrub time, cursor time, selected time (ambiguous with published finish time)
 
 **Queued finisher**:
-At the selected moment, a finisher who has already had a finisher arrival but has not yet received a finish token. Ordered front to back by arrival time; the front finisher is next to receive a token.
+At the selected moment, a finisher who has already had a finisher arrival but has not yet received a finish token. Ordered front to back by arrival time; the front finisher is next to receive a token. In the event results table at selected moment, status shows **In queue**; queue position and wait metrics are populated.
 _Avoid_: Waiting runner, person in queue (too informal)
 
 **Queue visualisation**:
-The UI shown at the selected moment: a **queue moment summary** plus a paginated, keyboard-accessible table of queued finishers (front of queue first), 25 rows per page by default, with optional search by name or finish position. Each row shows finish position, name, published finish time, lane (or Overflow), physical batch (unnamed or **A**, **B**, **C**, … — every queued finisher), queue position, time waiting, time until token, and total estimated queueing time; the finisher who holds the batch marker card (first in a named physical batch) is visually distinguished in the batch column. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
+The UI shown at the selected moment: a **queue moment summary** plus a complete **event results table at selected moment** — one row per finisher in the event results, in finish position order like the parkrun results page, with optional search by name or finish position. Simulation columns (lane, batch, queue metrics, Finish Tokens volunteer) are populated according to each finisher’s state at the selected moment; blank where not applicable. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
 _Avoid_: Queue view, funnel map (ambiguous with capacity sizing)
+
+**Event results table at selected moment**:
+The complete results table in the queue visualisation: every **results row** for the loaded event, ordered by finish position. Columns: finish position, name, published finish time, status, lane, batch, queue position, time waiting, time until token, total estimated queueing time, Finish Tokens volunteer. At the selected moment each row is in one of four states — **not yet finished**, **finish-line blocked**, **queued**, or **tokened** — with simulation columns filled or left blank accordingly. A **Status** column shows **At finish line** or **In queue** where applicable; blank for not-yet-finished and tokened rows. Optional search by name or finish position filters visible rows; empty search shows every finisher with no pagination. The table scrolls vertically with a sticky header. Replaces the former paginated queued-only table.
+_Avoid_: Full results table (too generic), queue table (ambiguous with queued-only)
 
 **Queue moment summary**:
 The breakdown shown above the queue table at the selected moment. The section heading carries total queue depth at the selected moment (e.g. “Queue at selected moment (719)”). For multi-lane layouts: a dedicated line below the section heading and above the per-lane list states how many **batch marker cards** are needed for the full simulated event (e.g. “Batch marker cards needed for event: 8”; singular when the count is 1). The count is named physical batches only — lane-fill switches excluding the unnamed first batch — and is fixed for the layout and fixture, not changing when the selected moment moves. Then every configured finish funnel lane is listed. Per lane, queued finishers and queue-zone utilisation as occupied / maximum finishers and occupied / maximum metres (queue zone = lane length minus deceleration; occupied metres = queued in lane × finisher spacing, shown to one decimal place). Under each lane, every physical batch that still has at least one queued finisher in that lane at the selected moment, with count, listed in switch order — typically two or three batches per lane at peak (e.g. lane 1: unnamed 12, B 381; lane 2: B 180, C 95, D 51). When finish-line backup is modelled and finishers are blocked at the finish line at the selected moment, an additional line states how many have not yet entered the funnel. Replaces the single-line queue depth paragraph. For a single finish funnel lane, show the lane utilisation line only — no physical batch nesting and no batch-card count (batch marker cards are not used).
 _Avoid_: Lane status panel, funnel snapshot
 
 **Finish-line blocked finisher**:
-At the selected moment, a finisher who has passed the finish line by published (or estimated) finish time but has not yet had a finisher arrival into the funnel because finish-line backup delayed admission. Not counted in queue depth or lane occupancy until they enter.
+At the selected moment, a finisher who has passed the finish line by published (or estimated) finish time but has not yet had a finisher arrival into the funnel because finish-line backup delayed admission. Not counted in queue depth or lane occupancy until they enter. In the event results table at selected moment, lane, batch, queue metrics, and Finish Tokens volunteer are blank; status shows **At finish line**.
 _Avoid_: Waiting to enter, pre-funnel finisher
+
+**Tokened finisher**:
+At the selected moment, a finisher who has already received a finish token. In the event results table at selected moment, lane and physical batch are shown from finisher lane assignment; queue position and time until token are blank; time waiting and total estimated queueing time show actual durations; Finish Tokens volunteer shows which volunteer in the rotation pool handed the token (labelled **Finish Tokens 1**, **Finish Tokens 2**, …).
+_Avoid_: Served finisher, completed finisher
+
+**Finish Tokens volunteer label**:
+How a volunteer in the Finish Tokens rotation pool is named in the event results table when they handed a token: **Finish Tokens 1**, **Finish Tokens 2**, … in pool order. Blank when no token has been handed yet for that finisher at the selected moment.
+_Avoid_: Volunteer 1 (ambiguous with other roles), FT1 (too cryptic)
+
+**Not-yet-finished finisher**:
+At the selected moment, a finisher whose published (or estimated) finish time is still in the future — they have not yet crossed the finish line. In the event results table at selected moment, simulation columns (status excepted, lane, batch, queue metrics, Finish Tokens volunteer) are blank.
+_Avoid_: Still running, on course (too informal)
 
 **Queue position**:
 A queued finisher’s 1-based rank at the selected moment, counting from the front of the queue. Position 1 is next to receive a finish token.

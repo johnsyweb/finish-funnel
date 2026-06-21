@@ -44,16 +44,17 @@ Full glossary: [`CONTEXT.md`](./CONTEXT.md)
 
 ### Queue visualisation (done — 2026-06-21)
 
-| Topic                | Decision                                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Selected moment      | Clock finish time on chart; **queued finisher** = arrived, not yet tokened                                   |
-| Default moment       | **First** instant peak queue depth is reached; reset on simulation settings change                           |
-| Event results fields | Finish **position**, **name** (`data-name`), published **finish time** only                                  |
-| Queue visualisation  | Paginated table (25/page, front first); optional search by name or position; spatial funnel diagram deferred |
-| Table columns        | Finish position, name, time, queue position, time waiting, time until token, total estimated queueing time   |
-| Unknown finishers    | Estimated badge; wait metrics from neighbour-estimated arrival                                               |
-| Chart interaction    | Click/drag vertical indicator; arrow keys when chart focused; readable clock time on chart                   |
-| API                  | `queuedFinishersAtMoment`; shared sim core records **token handover time** per finisher                      |
+| Topic                | Decision                                                                                                                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Selected moment      | Clock finish time on chart; **queued finisher** = arrived, not yet tokened                                                                                                                |
+| Default moment       | **First** instant peak queue depth is reached; reset on simulation settings change                                                                                                        |
+| Event results fields | Finish **position**, **name** (`data-name`), published **finish time** only                                                                                                               |
+| Queue visualisation  | Complete **event results table at selected moment** (every finisher, finish position order); optional search by name or position; sticky header + scroll; spatial funnel diagram deferred |
+| Table columns        | Finish position, name, finish time, status, lane, batch, queue position, time waiting, time until token, total estimated queueing time, Finish Tokens volunteer                           |
+| Row states           | **Not yet finished**, **finish-line blocked** (status **At finish line**), **queued** (**In queue**), **tokened** (volunteer label **Finish Tokens 1**, …)                                |
+| Unknown finishers    | Estimated badge; wait metrics from neighbour-estimated arrival                                                                                                                            |
+| Chart interaction    | Click/drag vertical indicator; arrow keys when chart focused; readable clock time on chart                                                                                                |
+| API                  | `eventResultsAtMoment` (re-exports via `queuedFinishersAtMoment`); sim records **token handover time** and **Finish Tokens volunteer** per finisher                                       |
 
 ### Multi-lane layout (done — 2026-06-21)
 
@@ -93,7 +94,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–13)
 
 ### Done
 
-- **Domain modules** (132 tests):
+- **Domain modules** (133 tests):
   - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
@@ -123,7 +124,7 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 ### Finish-line backup (done — 2026-06-21)
 
 - `simulateFinishFunnel` optional `maxQueueDepth`; `simulateFinishTokens` wrapper
-- Capped simulation wired through `analyzeFinishFunnel` and `queuedFinishersAtMoment`
+- Capped simulation wired through `analyzeFinishFunnel` and `eventResultsAtMoment`
 - Finish-line backup warning hidden when backup is modelled
 - Finisher spacing clamped to lane queue zone in UI and simulation
 - Finish-line backup delay metrics (max, average, count) when backup occurs
@@ -135,6 +136,13 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 - Per-lane utilisation and batch counts; finish-line blocked line when backup modelled
 - Event-wide batch marker card count in queue moment summary
 - Section heading `Queue at selected moment (N)`; physical batch on every queue table row
+
+### Event results table at selected moment (done — 2026-06-21)
+
+- `eventResultsAtMoment` returns every results row with row state at the selected moment
+- `formatFinishTokensVolunteerLabel`; `finishTokensVolunteerNumber` on each token handover in sim
+- Complete scrollable table replaces paginated queued-only table; search filters visible rows
+- Status column: **At finish line**, **In queue**, or blank; Finish Tokens volunteer on tokened rows
 
 ### Finish Tokens rotation (done — 2026-06-21)
 
