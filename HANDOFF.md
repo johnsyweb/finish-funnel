@@ -80,7 +80,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–11)
 
 ### Done
 
-- **Domain modules** (91 tests):
+- **Domain modules** (105 tests):
   - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
@@ -112,10 +112,11 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 - `simulateFinishFunnel` optional `maxQueueDepth`; `simulateFinishTokens` wrapper
 - Capped simulation wired through `analyzeFinishFunnel` and `queuedFinishersAtMoment`
 - Finish-line backup warning hidden when backup is modelled
+- Finisher spacing clamped to lane queue zone in UI and simulation
+- Finish-line backup delay metrics (max, average, count) when backup occurs
 
 ### Not done
 
-- Finish-line backup delay metrics in UI (deferred)
 - No deployment to johnsy.com
 - No tampermonkey-parkrun userscript integration
 
@@ -160,7 +161,6 @@ aube run build:fixtures   # needs /tmp/*.html from curl (see README)
 
 1. **Userscript** — port parser + APIs to tampermonkey-parkrun
 2. **Deploy** — johnsy.com hosting alongside other parkrun utilities
-3. **Finish-line backup delay metrics** — optional UI for wait at finish line
 
 ---
 

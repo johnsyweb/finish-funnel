@@ -44,6 +44,10 @@ _Avoid_: Unassigned, extra finisher, spillover
 When combined lane capacity is exceeded, the queue backs over the finish line and blocks new finishes until space frees. Modelled by capping funnel admissions at combined lane capacity and delaying effective finisher arrivals until a token handover frees a slot. Applies when a multi-lane layout is configured in the simulation.
 _Avoid_: Finish line congestion, gridlock
 
+**Finish-line backup delay**:
+How long a finisher waits at the finish line before entering the funnel when finish-line backup applies: effective finisher arrival minus published finisher arrival. The UI shows maximum and average delay across delayed finishers when backup occurred for the simulated event.
+_Avoid_: Blocked time, gridlock delay
+
 **Lane queue capacity**:
 The number of finishers one finish funnel lane can hold: lane physical length minus deceleration zone, divided by finisher spacing, rounded down.
 _Avoid_: Lane size, lane length (ambiguous with metres)
