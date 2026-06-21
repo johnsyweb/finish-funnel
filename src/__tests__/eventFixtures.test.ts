@@ -8,11 +8,24 @@ function loadFixture(id: string) {
     "utf8",
   );
   return JSON.parse(raw) as {
-    finishers: Array<{ position: number; time: string }>;
+    finishers: Array<{ position: number; name: string; time: string }>;
   };
 }
 
 describe("event fixtures", () => {
+  it("includes finisher names from published results rows", () => {
+    const fixture = loadFixture("bushy-1095");
+    const carmen = fixture.finishers.find(
+      (finisher) => finisher.position === 1000,
+    );
+
+    expect(carmen).toEqual({
+      position: 1000,
+      name: "Carmen PALMER",
+      time: "31:52",
+    });
+  });
+
   it("sizes a record Bushy event for a single Finish Tokens volunteer", () => {
     const fixture = loadFixture("bushy-1095");
     const result = analyzeFinishFunnel({ finishers: fixture.finishers });

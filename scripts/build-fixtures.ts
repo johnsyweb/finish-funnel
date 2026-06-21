@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { parseFinishTimeToSeconds } from "../src/parseFinishTimeToSeconds";
 import { parseResultsHtml } from "../src/parseResultsHtml";
 
-type FixtureFinisher = { position: number; time: string };
+type FixtureFinisher = { position: number; name: string; time: string };
 
 type EventFixture = {
   id: string;

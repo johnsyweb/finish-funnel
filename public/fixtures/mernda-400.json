@@ -6,322 +6,402 @@
   "finishers": [
     {
       "position": 1,
+      "name": "Dale LEWIS",
       "time": "18:34"
     },
     {
       "position": 2,
+      "name": "Rowan DREW",
       "time": "18:39"
     },
     {
       "position": 3,
+      "name": "Jack GRAY",
       "time": "21:20"
     },
     {
       "position": 4,
+      "name": "James ROCKLIFF",
       "time": "21:35"
     },
     {
       "position": 5,
+      "name": "Sean ROOS",
       "time": "21:44"
     },
     {
       "position": 6,
+      "name": "Warren NOAKES",
       "time": "22:00"
     },
     {
       "position": 7,
+      "name": "Unknown",
       "time": "Unknown"
     },
     {
       "position": 8,
+      "name": "Cameron MCIVER",
       "time": "23:19"
     },
     {
       "position": 9,
+      "name": "Andrew DOWNES",
       "time": "24:21"
     },
     {
       "position": 10,
+      "name": "Mohammad MOSAVAT",
       "time": "25:20"
     },
     {
       "position": 11,
+      "name": "Jeffrey BERNAYS",
       "time": "25:26"
     },
     {
       "position": 12,
+      "name": "David CHISANGA",
       "time": "25:43"
     },
     {
       "position": 13,
+      "name": "Belinda JOY",
       "time": "25:55"
     },
     {
       "position": 14,
+      "name": "Toni KEYWOOD",
       "time": "27:08"
     },
     {
       "position": 15,
+      "name": "Bonnie DUNN",
       "time": "27:58"
     },
     {
       "position": 16,
+      "name": "Matthew AMENTA",
       "time": "27:58"
     },
     {
       "position": 17,
+      "name": "Ryan GIDEON",
       "time": "27:59"
     },
     {
       "position": 18,
+      "name": "Patrick CHAANIN",
       "time": "28:03"
     },
     {
       "position": 19,
+      "name": "Josh KVALHEIM",
       "time": "29:08"
     },
     {
       "position": 20,
+      "name": "John-Patrick GASPER",
       "time": "29:09"
     },
     {
       "position": 21,
+      "name": "Zach ALBERY",
       "time": "29:24"
     },
     {
       "position": 22,
+      "name": "Kate THOMPSON",
       "time": "29:25"
     },
     {
       "position": 23,
+      "name": "Jai CRISAPULLI",
       "time": "29:34"
     },
     {
       "position": 24,
+      "name": "Malachi ROOS",
       "time": "29:47"
     },
     {
       "position": 25,
+      "name": "Kayleb ROOS",
       "time": "29:53"
     },
     {
       "position": 26,
+      "name": "Unknown",
       "time": "Unknown"
     },
     {
       "position": 27,
+      "name": "Luke BAZ",
       "time": "30:15"
     },
     {
       "position": 28,
+      "name": "Julia MCARDLE",
       "time": "30:15"
     },
     {
       "position": 29,
+      "name": "Brad ADRICHEM",
       "time": "30:31"
     },
     {
       "position": 30,
+      "name": "Jake WINGRAVE",
       "time": "31:21"
     },
     {
       "position": 31,
+      "name": "Paul OLDMAN",
       "time": "31:31"
     },
     {
       "position": 32,
+      "name": "Olivia DR",
       "time": "31:53"
     },
     {
       "position": 33,
+      "name": "Jenni ROGAN",
       "time": "32:01"
     },
     {
       "position": 34,
+      "name": "Nicola DEPANGHER",
       "time": "32:20"
     },
     {
       "position": 35,
+      "name": "Phil THOMPSON",
       "time": "33:49"
     },
     {
       "position": 36,
+      "name": "Shamus QUINLAN",
       "time": "33:51"
     },
     {
       "position": 37,
+      "name": "Charles CRISAPULLI",
       "time": "33:52"
     },
     {
       "position": 38,
+      "name": "Lisa BULLEN",
       "time": "34:43"
     },
     {
       "position": 39,
+      "name": "Nicole BULLEN",
       "time": "34:49"
     },
     {
       "position": 40,
+      "name": "Glen NAPOLI",
       "time": "34:54"
     },
     {
       "position": 41,
+      "name": "Donna COOPER",
       "time": "34:59"
     },
     {
       "position": 42,
+      "name": "Pete JOHNS",
       "time": "35:11"
     },
     {
       "position": 43,
+      "name": "Richard ARNEY",
       "time": "35:56"
     },
     {
       "position": 44,
+      "name": "Mikayla GUILFOYLE",
       "time": "36:39"
     },
     {
       "position": 45,
+      "name": "Brian DUNELL",
       "time": "36:41"
     },
     {
       "position": 46,
+      "name": "Nidhi SINGH",
       "time": "37:33"
     },
     {
       "position": 47,
+      "name": "David STAVELY",
       "time": "38:03"
     },
     {
       "position": 48,
+      "name": "Marian OKEEFE",
       "time": "38:03"
     },
     {
       "position": 49,
+      "name": "Adam WILSON",
       "time": "38:07"
     },
     {
       "position": 50,
+      "name": "Amanda NOAKES",
       "time": "38:23"
     },
     {
       "position": 51,
+      "name": "Cindy ATTARD",
       "time": "39:42"
     },
     {
       "position": 52,
+      "name": "Caroline LACEY",
       "time": "40:06"
     },
     {
       "position": 53,
+      "name": "Leanne SPITERI",
       "time": "40:07"
     },
     {
       "position": 54,
+      "name": "Fiona ADRICHEM",
       "time": "40:34"
     },
     {
       "position": 55,
+      "name": "Sarah OLDMAN",
       "time": "40:34"
     },
     {
       "position": 56,
+      "name": "Russell EDWARDS",
       "time": "40:39"
     },
     {
       "position": 57,
+      "name": "Julie DIB",
       "time": "42:13"
     },
     {
       "position": 58,
+      "name": "Danelle SCHUYLER",
       "time": "43:15"
     },
     {
       "position": 59,
+      "name": "Jessica PARLETTA",
       "time": "47:54"
     },
     {
       "position": 60,
+      "name": "Jack LUDWELL",
       "time": "48:02"
     },
     {
       "position": 61,
+      "name": "Hudson LAW",
       "time": "48:03"
     },
     {
       "position": 62,
+      "name": "C SWEENEY",
       "time": "49:20"
     },
     {
       "position": 63,
+      "name": "Albert OH",
       "time": "49:25"
     },
     {
       "position": 64,
+      "name": "Sharon KENNY",
       "time": "49:50"
     },
     {
       "position": 65,
+      "name": "Unknown",
       "time": "Unknown"
     },
     {
       "position": 66,
+      "name": "Willow THOMPSON",
       "time": "51:46"
     },
     {
       "position": 67,
+      "name": "Callum MC LEOD",
       "time": "51:54"
     },
     {
       "position": 68,
+      "name": "Harper THOMPSON",
       "time": "52:28"
     },
     {
       "position": 69,
+      "name": "Jack KENNY",
       "time": "53:00"
     },
     {
       "position": 70,
+      "name": "Leanda ARNEY",
       "time": "53:47"
     },
     {
       "position": 71,
+      "name": "Christine LUDWELL",
       "time": "54:13"
     },
     {
       "position": 72,
+      "name": "Kylie TARGETT",
       "time": "1:00:05"
     },
     {
       "position": 73,
+      "name": "Milissa MCGUINNESS",
       "time": "1:00:05"
     },
     {
       "position": 74,
+      "name": "Katy DREWITT",
       "time": "1:02:30"
     },
     {
       "position": 75,
+      "name": "Julie SEMPLE",
       "time": "1:02:46"
     },
     {
       "position": 76,
+      "name": "James GASPER",
       "time": "1:02:47"
     },
     {
       "position": 77,
+      "name": "Chris CLARK",
       "time": "1:02:49"
     },
     {
       "position": 78,
+      "name": "Benjamin GASPER",
       "time": "1:02:50"
     },
     {
       "position": 79,
+      "name": "Aaron DIB",
       "time": "1:26:35"
     },
     {
       "position": 80,
+      "name": "Elma TRIM",
       "time": "1:26:48"
     }
   ]

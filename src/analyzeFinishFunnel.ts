@@ -13,6 +13,7 @@ import type { FinishTokensSettings, FinisherArrival } from "./types";
 
 export type EventFinisherInput = {
   position: number;
+  name: string;
   time: string;
 };
 
@@ -48,6 +49,7 @@ export function buildFinisherArrivals(
     withTimes.map((finisher) => ({
       timeSeconds: finisher.timeSeconds,
       estimated: finisher.estimated,
+      position: finisher.position,
     })),
   );
 }

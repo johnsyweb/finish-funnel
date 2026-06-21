@@ -5,10 +5,10 @@ describe("analyzeFinishFunnel", () => {
   it("recommends a rounded physical length for a busy burst of finishers", () => {
     const result = analyzeFinishFunnel({
       finishers: [
-        { position: 1, time: "23:00" },
-        { position: 2, time: "23:00" },
-        { position: 3, time: "23:00" },
-        { position: 4, time: "23:01" },
+        { position: 1, name: "", time: "23:00" },
+        { position: 2, name: "", time: "23:00" },
+        { position: 3, name: "", time: "23:00" },
+        { position: 4, name: "", time: "23:01" },
       ],
     });
 
@@ -20,8 +20,8 @@ describe("analyzeFinishFunnel", () => {
   it("reports a quiet event may not need a roped-off funnel", () => {
     const result = analyzeFinishFunnel({
       finishers: [
-        { position: 1, time: "18:30" },
-        { position: 2, time: "19:45" },
+        { position: 1, name: "", time: "18:30" },
+        { position: 2, name: "", time: "19:45" },
       ],
     });
 
