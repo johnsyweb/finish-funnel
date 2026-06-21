@@ -2,6 +2,7 @@ import { analyzeFinishFunnel } from "./analyzeFinishFunnel";
 import { attachCanvasResizeHandler } from "./attachCanvasResizeHandler";
 import { attachChartMomentControls } from "./attachChartMomentControls";
 import { buildAppMarkup } from "./buildAppMarkup";
+import { buildMetricsMarkup } from "./buildMetricsMarkup";
 import {
   buildQueuePaginationMarkup,
   buildQueueSummaryMarkup,
@@ -15,12 +16,12 @@ import {
   timeRangeFromChartPoints,
   type ChartTimeRange,
 } from "./chartMomentMapping";
-import { proposedFunnelQueueCapacity } from "./checkProposedFunnel";
 import {
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISHER_SPACING_METRES,
   DEFAULT_FIXTURE_ID,
 } from "./defaults";
+import { fixtureLayoutDefaults } from "./fixtureLayoutDefaults";
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import { orderFixturesForDisplay } from "./orderFixturesForDisplay";
@@ -28,6 +29,8 @@ import {
   firstMomentAtPeakQueueDepth,
   queuedFinishersAtMoment,
 } from "./queuedFinishersAtMoment";
+import { resolveCallout } from "./resolveCallout";
+import type { BatchMarkerMoment } from "./batchMarkerMoments";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
 
 type EventFixture = {
@@ -59,8 +62,9 @@ const finisherSpacingInput =
   document.querySelector<HTMLInputElement>("#finisher-spacing")!;
 const decelerationZoneInput =
   document.querySelector<HTMLInputElement>("#deceleration-zone")!;
-const proposedFunnelInput =
-  document.querySelector<HTMLInputElement>("#proposed-funnel")!;
+const laneCountInput = document.querySelector<HTMLInputElement>("#lane-count")!;
+const laneLengthInput =
+  document.querySelector<HTMLInputElement>("#lane-length")!;
 const callout = document.querySelector<HTMLDivElement>("#callout")!;
 const metrics = document.querySelector<HTMLDivElement>("#metrics")!;
 const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
@@ -94,6 +98,7 @@ let selectedMomentSeconds = 0;
 let simulationStateKey = "";
 let chartTimeRange: ChartTimeRange = { minTimeSeconds: 0, maxTimeSeconds: 0 };
 let queuePageIndex = 0;
+let batchMarkerMoments: BatchMarkerMoment[] = [];
 
 function readNumberInput(input: HTMLInputElement, fallback: number): number {
   const value = Number(input.value);
@@ -106,6 +111,12 @@ function selectedFixture(): EventFixture {
     throw new Error("Fixture not found");
   }
   return fixture;
+}
+
+function applyFixtureLayoutDefaults(fixtureId: string): void {
+  const defaults = fixtureLayoutDefaults(fixtureId);
+  laneCountInput.value = String(defaults.laneCount);
+  laneLengthInput.value = String(defaults.laneLengthMetres);
 }
 
 function currentSimulationStateKey(fixtureId: string): string {
@@ -130,6 +141,12 @@ function renderQueueVisualisation(
     tokensPerMinutePerVolunteer: number;
     volunteerCount: number;
   },
+  layout: {
+    laneCount: number;
+    laneLengthMetres: number;
+    decelerationZoneMetres: number;
+    finisherSpacingMetres: number;
+  },
 ): void {
   const searchFilter = parseQueueSearchFilter(queueSearchInput.value);
   const queueResult = queuedFinishersAtMoment({
@@ -138,13 +155,17 @@ function renderQueueVisualisation(
     momentSeconds: selectedMomentSeconds,
     offset: queuePageIndex * QUEUE_PAGE_SIZE,
     limit: QUEUE_PAGE_SIZE,
+    laneCount: layout.laneCount,
+    laneLengthMetres: layout.laneLengthMetres,
+    decelerationZoneMetres: layout.decelerationZoneMetres,
+    finisherSpacingMetres: layout.finisherSpacingMetres,
     ...searchFilter,
   });
   const pageCount = queuePageCount(queueResult.totalCount, QUEUE_PAGE_SIZE);
 
   if (queuePageIndex >= pageCount) {
     queuePageIndex = Math.max(0, pageCount - 1);
-    renderQueueVisualisation(fixture, finishTokensSettings);
+    renderQueueVisualisation(fixture, finishTokensSettings, layout);
     return;
   }
 
@@ -172,7 +193,8 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
     decelerationZoneInput,
     DEFAULT_DECELERATION_ZONE_METRES,
   );
-  const proposedFunnelMetres = readNumberInput(proposedFunnelInput, 30);
+  const laneCount = readNumberInput(laneCountInput, 1);
+  const laneLengthMetres = readNumberInput(laneLengthInput, 30);
   const nextSimulationStateKey = currentSimulationStateKey(fixture.id);
 
   if (resetSelectedMoment || nextSimulationStateKey !== simulationStateKey) {
@@ -186,10 +208,12 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
     finishTokensSettings,
     decelerationZoneMetres,
     finisherSpacingMetres,
-    proposedFunnelMetres,
+    laneCount,
+    laneLengthMetres,
   });
 
   chartTimeRange = timeRangeFromChartPoints(result.queueDepthOverTime);
+  batchMarkerMoments = result.batchMarkerMoments;
   const peakMoment = firstMomentAtPeakQueueDepth(
     result.queueDepthOverTime,
     result.peakQueueDepth,
@@ -205,58 +229,48 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
     chartTimeRange,
   );
 
-  if (result.funnelNotRequired) {
-    callout.hidden = false;
-    callout.className = "callout";
-    callout.textContent =
-      "A roped-off funnel may not be needed for this event.";
-  } else {
+  const proposedMultiLaneLayout = result.proposedMultiLaneLayout ?? {
+    sufficient: true,
+    combinedLaneCapacity: 0,
+    headroomFinishers: 0,
+    shortfallFinishers: 0,
+    minimumLanesRequired: 0,
+  };
+
+  const calloutState = resolveCallout({
+    funnelNotRequired: result.funnelNotRequired,
+    combinedLaneCapacity: proposedMultiLaneLayout.combinedLaneCapacity,
+    peakQueueDepth: result.peakQueueDepth,
+  });
+
+  if (calloutState.hidden) {
     callout.hidden = true;
+  } else {
+    callout.hidden = false;
+    callout.className = calloutState.className;
+    callout.textContent = calloutState.text;
   }
 
-  const proposedQueueCapacity = proposedFunnelQueueCapacity({
-    proposedMetres: proposedFunnelMetres,
-    decelerationZoneMetres,
-    finisherSpacingMetres,
+  metrics.innerHTML = buildMetricsMarkup({
+    peakQueueDepth: result.peakQueueDepth,
+    proposedMultiLaneLayout,
   });
-  const adequacy = result.proposedFunnel;
-  const adequacyText = adequacy
-    ? adequacy.sufficient
-      ? `Sufficient (${adequacy.headroomFinishers} finisher headroom)`
-      : `Short by ${adequacy.shortfallFinishers} finishers`
-    : "";
-
-  metrics.innerHTML = `
-    <div class="metric">
-      <span>Peak queue capacity</span>
-      <strong>${result.peakQueueDepth}</strong>
-      finishers
-    </div>
-    <div class="metric">
-      <span>Recommended funnel length</span>
-      <strong>${result.recommendedLengthMetres} m</strong>
-      rounded up
-    </div>
-    <div class="metric">
-      <span>Proposed funnel capacity</span>
-      <strong>${proposedQueueCapacity}</strong>
-      finishers in queue zone
-    </div>
-    <div class="metric adequacy ${adequacy?.sufficient ? "ok" : "bad"}">
-      <span>Proposed funnel</span>
-      <strong>${adequacyText}</strong>
-    </div>
-  `;
 
   chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
 
   drawQueueDepthChart(chartCanvas, result.queueDepthOverTime, {
     peakQueueDepth: result.peakQueueDepth,
-    proposedQueueCapacity,
+    proposedQueueCapacity: proposedMultiLaneLayout.combinedLaneCapacity,
     selectedMomentSeconds,
+    batchMarkerMoments,
   });
 
-  renderQueueVisualisation(fixture, finishTokensSettings);
+  renderQueueVisualisation(fixture, finishTokensSettings, {
+    laneCount,
+    laneLengthMetres,
+    decelerationZoneMetres,
+    finisherSpacingMetres,
+  });
 }
 
 for (const element of [
@@ -267,8 +281,13 @@ for (const element of [
 ]) {
   element.addEventListener("input", () => render(true));
 }
-eventSelect.addEventListener("change", () => render(true));
-proposedFunnelInput.addEventListener("input", () => render());
+eventSelect.addEventListener("change", () => {
+  applyFixtureLayoutDefaults(eventSelect.value);
+  render(true);
+});
+for (const element of [laneCountInput, laneLengthInput]) {
+  element.addEventListener("input", () => render());
+}
 queueSearchInput.addEventListener("input", () => render(false, true));
 
 queueVisualisationPanel.addEventListener("click", (event) => {
@@ -293,6 +312,7 @@ attachChartMomentControls({
   canvas: chartCanvas,
   getRange: () => chartTimeRange,
   getMoment: () => selectedMomentSeconds,
+  getBatchMarkerMoments: () => batchMarkerMoments,
   onMomentChange: (momentSeconds) => {
     selectedMomentSeconds = momentSeconds;
     queuePageIndex = 0;
