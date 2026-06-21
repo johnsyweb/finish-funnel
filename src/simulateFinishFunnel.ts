@@ -68,13 +68,17 @@ export function simulateFinishFunnel(
   };
 
   const waitForQueueSpace = (earliestAdmissionTimeSeconds: number) => {
-    if (maxQueueDepth === undefined) {
+    if (maxQueueDepth === undefined || maxQueueDepth <= 0) {
       return earliestAdmissionTimeSeconds;
     }
 
     let admissionTimeSeconds = earliestAdmissionTimeSeconds;
 
     while (queue.length >= maxQueueDepth) {
+      if (nextDepartureTime === Number.POSITIVE_INFINITY) {
+        return admissionTimeSeconds;
+      }
+
       admissionTimeSeconds = Math.max(admissionTimeSeconds, nextDepartureTime);
       processDeparturesThrough(admissionTimeSeconds);
     }

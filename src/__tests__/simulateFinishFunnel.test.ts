@@ -97,4 +97,17 @@ describe("simulateFinishFunnel", () => {
       },
     ]);
   });
+
+  it("does not loop forever when maxQueueDepth is zero", () => {
+    const result = simulateFinishFunnel(
+      [
+        { timeSeconds: 0, position: 1 },
+        { timeSeconds: 1, position: 2 },
+      ],
+      DEFAULT_FINISH_TOKENS_SETTINGS,
+      { maxQueueDepth: 0 },
+    );
+
+    expect(result.peakQueueDepth).toBe(2);
+  });
 });

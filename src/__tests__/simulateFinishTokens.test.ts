@@ -49,4 +49,19 @@ describe("simulateFinishTokens", () => {
       timeSeconds: 4,
     });
   });
+
+  it("completes when finisher spacing exceeds lane queue length so capacity is zero", () => {
+    const result = simulateFinishTokens({
+      arrivals: [
+        { timeSeconds: 0, position: 1 },
+        { timeSeconds: 1, position: 2 },
+      ],
+      laneCount: 1,
+      laneLengthMetres: 30,
+      finisherSpacingMetres: 26,
+    });
+
+    expect(result.finishLineBackupModelled).toBe(false);
+    expect(result.peakQueueDepth).toBe(2);
+  });
 });

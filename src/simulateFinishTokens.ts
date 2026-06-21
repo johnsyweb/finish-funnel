@@ -37,7 +37,7 @@ export function simulateFinishTokens(
   const finishLineBackupModelled =
     input.laneCount !== undefined && input.laneLengthMetres !== undefined;
 
-  const maxQueueDepth = finishLineBackupModelled
+  const combinedCapacity = finishLineBackupModelled
     ? combinedLaneCapacity({
         laneCount: input.laneCount!,
         laneLengthMetres: input.laneLengthMetres!,
@@ -45,6 +45,11 @@ export function simulateFinishTokens(
         finisherSpacingMetres,
       })
     : undefined;
+
+  const maxQueueDepth =
+    combinedCapacity !== undefined && combinedCapacity > 0
+      ? combinedCapacity
+      : undefined;
 
   const simulation = simulateFinishFunnel(
     input.arrivals,
@@ -54,6 +59,9 @@ export function simulateFinishTokens(
 
   return {
     ...simulation,
-    finishLineBackupModelled,
+    finishLineBackupModelled:
+      finishLineBackupModelled &&
+      combinedCapacity !== undefined &&
+      combinedCapacity > 0,
   };
 }
