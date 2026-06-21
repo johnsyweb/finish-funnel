@@ -1,6 +1,6 @@
 # Finish Funnel
 
-Size a single-lane parkrun finish funnel so Finish Tokens can be handed out in order during busy finish periods.
+Size a parkrun finish funnel so Finish Tokens can be handed out in order during busy finish periods. Supports single-lane recommendations and multi-lane layout planning.
 
 ## Development
 
@@ -37,7 +37,9 @@ aube run build:fixtures
 - Finisher arrivals from published times (per-second, spread within each second)
 - Unknown finishers estimated from neighbours
 - Discrete token handover (default 15 tokens/min, 1 Finish Tokens volunteer)
-- Recommended length = deceleration zone + peak queue × finisher spacing, rounded up to whole metres
-- Proposed funnel adequacy check in metres
+- Single-lane: recommended length = deceleration zone + peak queue × finisher spacing, rounded up to whole metres
+- Multi-lane: lane count and lane length inputs; combined capacity vs peak; lane assignment with batch marker cards on lane-fill switches
+- Proposed funnel adequacy check in metres (single lane) or combined capacity (multi-lane)
+- Queue visualisation at a selected moment on the chart timeline
 
 See `CONTEXT.md` for domain language.
