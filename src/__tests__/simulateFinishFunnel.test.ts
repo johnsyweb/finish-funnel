@@ -34,4 +34,27 @@ describe("simulateFinishFunnel", () => {
     expect(withinThreshold.funnelNotRequired).toBe(true);
     expect(aboveThreshold.funnelNotRequired).toBe(false);
   });
+
+  it("records token handover times in queue order at discrete token intervals", () => {
+    const result = simulateFinishFunnel(
+      [
+        { timeSeconds: 0, position: 1 },
+        { timeSeconds: 0.5, position: 2 },
+      ],
+      DEFAULT_FINISH_TOKENS_SETTINGS,
+    );
+
+    expect(result.finisherSchedules).toEqual([
+      {
+        position: 1,
+        arrivalTimeSeconds: 0,
+        tokenHandoverTimeSeconds: 4,
+      },
+      {
+        position: 2,
+        arrivalTimeSeconds: 0.5,
+        tokenHandoverTimeSeconds: 8,
+      },
+    ]);
+  });
 });
