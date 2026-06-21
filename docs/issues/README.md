@@ -14,5 +14,6 @@ Tracer-bullet vertical slices for queue visualisation. No GitHub remote yet — 
 | 08  | [Multi-lane UI, metrics, and warnings](./08-multi-lane-ui-and-warnings.md)              | 07         |
 | 09  | [Queue table lane and batch columns](./09-queue-table-lane-and-batch.md)                | 08         |
 | 10  | [Batch markers on chart timeline](./10-batch-markers-on-chart-timeline.md)              | 09         |
+| 11  | [Finish-line backup simulation](./11-finish-line-backup-simulation.md)                  | 10         |
 
-After 10: finish-line backup simulation (deferred), userscript port, deploy (see `HANDOFF.md`).
+After 11: userscript port, deploy (see `HANDOFF.md`).
