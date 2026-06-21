@@ -37,11 +37,11 @@ The finish funnel lane a finisher enters at finisher arrival, determined by repl
 _Avoid_: Lane at token, current lane (ambiguous with lane switching after arrival)
 
 **Overflow finisher**:
-A finisher whose finisher lane assignment is overflow: they arrived after every proposed finish funnel lane was full. Overflow means the queue would back over the finish line; in reality people cannot finish until they can cross the line and enter the funnel. This slice flags overflow but does not yet re-simulate delayed finisher arrivals when capacity is breached.
+A finisher whose finisher lane assignment is overflow: they arrived after every proposed finish funnel lane was full at their effective admission time. When finish-line backup is modelled, admissions are delayed until a slot opens, so overflow should not occur for the configured layout. When backup is not modelled, overflow means the queue would back over the finish line.
 _Avoid_: Unassigned, extra finisher, spillover
 
 **Finish-line backup**:
-When combined lane capacity is exceeded, the queue backs over the finish line and blocks new finishes until space frees. Not yet modelled in simulation — deferred to a later slice that adjusts finisher arrivals when the funnel is full.
+When combined lane capacity is exceeded, the queue backs over the finish line and blocks new finishes until space frees. Modelled by capping funnel admissions at combined lane capacity and delaying effective finisher arrivals until a token handover frees a slot. Applies when a multi-lane layout is configured in the simulation.
 _Avoid_: Finish line congestion, gridlock
 
 **Lane queue capacity**:
