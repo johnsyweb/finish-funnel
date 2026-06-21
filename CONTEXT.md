@@ -20,12 +20,20 @@ _Avoid_: Funnel length alone (ambiguous without stating physical vs capacity)
 One roped parallel section of the finish funnel. New finishers stay on the **current lane** while it has spare capacity; when it is full, the Funnel Manager switches to the lowest numbered lane with spare capacity (including a lane that has reopened after emptying). Each lane has its own physical length including a deceleration zone at the finish-line end.
 _Avoid_: Chute, corridor, batch (describes token grouping, not physical layout)
 
+**Physical batch**:
+A contiguous segment of finishers admitted during one lane-fill cycle. The **first physical batch** is unnamed and runs until finish funnel lane 1 reaches capacity for the first time. Each subsequent physical batch is named **A**, **B**, **C**, … in switch order and runs until the lane being filled in that cycle reaches capacity again. With two lanes: unnamed (lane 1, first fill) → **A** (lane 2, first fill) → **B** (lane 1 refill) → **C** (lane 2 refill) → **D** (lane 1) → …, alternating lanes. With three or more lanes, the same rule cycles through lane numbers in order (unnamed fills lane 1, then **A** fills lane 2, **B** lane 3, **C** lane 1 again, and so on). A finisher belongs to exactly one physical batch. Physical batches are not token batches — token handover order stays strict finish position order across all lanes.
+_Avoid_: Batch token, token batch, processing batch
+
 **Batch marker card**:
-A card handed to the first finisher who enters a lane immediately after a **lane-fill switch** — when the current lane has just reached capacity and the Funnel Manager routes the next finisher to another lane with spare capacity. Not given at event start before any switch, and none when only one finish funnel lane is configured. Example: lane 1 fills → first entrant to lane 2 receives **A**; lane 2 fills → first new entrant to lane 1 receives **B**. Letters run **A**, **B**, **C**, … in switch order. Only that finisher’s row shows the letter in the queue visualisation. Overflow finishers have no batch marker. Operational aid only; token handover order remains strict finish position order.
+A card handed to the first finisher who starts a named physical batch — the first entrant to the target lane after a lane-fill switch. The first physical batch has no card. **A** marks the start of the second physical batch; **B** the third; and so on. None when only one finish funnel lane is configured. Overflow finishers have no physical batch. Operational aid only.
 _Avoid_: Batch token, lane card, separator card
 
+**Batch marker holder**:
+The queued finisher who received the batch marker card — the first finisher in a named physical batch. The queue table shows the same physical batch letter on every finisher in the batch; the holder’s cell adds a card indicator with an accessible label (e.g. “A, batch marker holder”).
+_Avoid_: Batch leader, card carrier
+
 **Batch marker moment**:
-The finisher arrival time of a finisher who holds a batch marker card — the instant after a lane-fill switch. Every batch marker moment for the simulated event is shown on the queue depth chart. On the chart, shown as a short vertical tick at that clock finish time with the batch letter only labelled above the plot in a distinct colour from the selected-moment indicator. Clicking a batch tick moves the selected moment to that instant.
+The finisher arrival time of a finisher who holds a batch marker card — the instant a named physical batch begins. Every batch marker moment for the simulated event is shown on the queue depth chart. On the chart, shown as a short vertical tick at that clock finish time with the batch letter only labelled above the plot in a distinct colour from the selected-moment indicator. Clicking a batch tick moves the selected moment to that instant.
 _Avoid_: Batch start time (informal), card time
 
 **Funnel Manager**:
@@ -121,8 +129,16 @@ At the selected moment, a finisher who has already had a finisher arrival but ha
 _Avoid_: Waiting runner, person in queue (too informal)
 
 **Queue visualisation**:
-The UI shown at the selected moment: a summary of queue depth plus a paginated, keyboard-accessible table of queued finishers (front of queue first), 25 rows per page by default, with optional search by name or finish position. Each row shows finish position, name, published finish time, lane (or Overflow), batch marker letter when applicable, queue position, time waiting, time until token, and total estimated queueing time; Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
+The UI shown at the selected moment: a **queue moment summary** plus a paginated, keyboard-accessible table of queued finishers (front of queue first), 25 rows per page by default, with optional search by name or finish position. Each row shows finish position, name, published finish time, lane (or Overflow), physical batch (unnamed or **A**, **B**, **C**, … — every queued finisher), queue position, time waiting, time until token, and total estimated queueing time; the finisher who holds the batch marker card (first in a named physical batch) is visually distinguished in the batch column. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
 _Avoid_: Queue view, funnel map (ambiguous with capacity sizing)
+
+**Queue moment summary**:
+The breakdown shown above the queue table at the selected moment. The section heading carries total queue depth at the selected moment (e.g. “Queue at selected moment (719)”). For multi-lane layouts: every configured finish funnel lane is listed. Per lane, queued finishers and queue-zone utilisation as occupied / maximum finishers and occupied / maximum metres (queue zone = lane length minus deceleration; occupied metres = queued in lane × finisher spacing, shown to one decimal place). Under each lane, which physical batches have finishers currently assigned to that lane and how many — only batches with at least one queued finisher in that lane, listed in switch order (e.g. lane 1: unnamed 12, B 381). When finish-line backup is modelled and finishers are blocked at the finish line at the selected moment, an additional line states how many have not yet entered the funnel. Replaces the single-line queue depth paragraph. For a single finish funnel lane, show the lane utilisation line only — no physical batch nesting (batch marker cards are not used).
+_Avoid_: Lane status panel, funnel snapshot
+
+**Finish-line blocked finisher**:
+At the selected moment, a finisher who has passed the finish line by published (or estimated) finish time but has not yet had a finisher arrival into the funnel because finish-line backup delayed admission. Not counted in queue depth or lane occupancy until they enter.
+_Avoid_: Waiting to enter, pre-funnel finisher
 
 **Queue position**:
 A queued finisher’s 1-based rank at the selected moment, counting from the front of the queue. Position 1 is next to receive a finish token.

@@ -5,7 +5,9 @@ export type FinisherLaneAssignment = {
   position?: number;
   arrivalTimeSeconds: number;
   lane: number | "overflow";
+  physicalBatch?: string;
   batchMarker?: string;
+  isBatchMarkerHolder?: boolean;
   estimated?: boolean;
 };
 
@@ -43,7 +45,9 @@ export function assignFinisherLanes({
   });
   const occupancy = Array.from({ length: laneCount }, () => 0);
   const assignmentsByPosition = new Map<number, FinisherLaneAssignment>();
-  let nextBatchLetterIndex = 0;
+  let physicalBatch = "unnamed";
+  let nextNamedBatchIndex = 0;
+  let awaitingBatchMarkerHolder = false;
   let currentLane: number | undefined;
 
   const events: LaneEvent[] = [
@@ -93,19 +97,24 @@ export function assignFinisherLanes({
       estimated: arrival.estimated,
     };
 
-    if (
-      laneCount > 1 &&
-      currentLane !== undefined &&
-      occupancy[currentLane - 1] >= perLaneCapacity &&
-      lane !== currentLane
-    ) {
-      assignment.batchMarker = batchMarkerForIndex(nextBatchLetterIndex);
-      nextBatchLetterIndex += 1;
+    if (laneCount > 1) {
+      assignment.physicalBatch = physicalBatch;
+      if (awaitingBatchMarkerHolder) {
+        assignment.isBatchMarkerHolder = true;
+        assignment.batchMarker = physicalBatch;
+        awaitingBatchMarkerHolder = false;
+      }
     }
 
     assignmentsByPosition.set(position, assignment);
     occupancy[lane - 1] += 1;
     currentLane = lane;
+
+    if (laneCount > 1 && occupancy[lane - 1] >= perLaneCapacity) {
+      physicalBatch = batchMarkerForIndex(nextNamedBatchIndex);
+      nextNamedBatchIndex += 1;
+      awaitingBatchMarkerHolder = true;
+    }
   }
 
   return [...assignmentsByPosition.values()].sort((left, right) => {

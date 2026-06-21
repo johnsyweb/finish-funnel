@@ -48,8 +48,9 @@ describe("assignFinisherLanes", () => {
     expect(assignments[0]).toMatchObject({
       position: 1,
       lane: 1,
+      physicalBatch: "unnamed",
     });
-    expect(assignments[0]?.batchMarker).toBeUndefined();
+    expect(assignments[0]?.isBatchMarkerHolder).toBeUndefined();
   });
 
   it("assigns A when lane 1 fills and the first finisher enters lane 2", () => {
@@ -70,17 +71,21 @@ describe("assignFinisherLanes", () => {
         position: 1,
         arrivalTimeSeconds: 0,
         lane: 1,
+        physicalBatch: "unnamed",
       },
       {
         position: 2,
         arrivalTimeSeconds: 1,
         lane: 1,
+        physicalBatch: "unnamed",
       },
       {
         position: 3,
         arrivalTimeSeconds: 2,
         lane: 2,
+        physicalBatch: "A",
         batchMarker: "A",
+        isBatchMarkerHolder: true,
       },
     ]);
   });
@@ -110,12 +115,16 @@ describe("assignFinisherLanes", () => {
     expect(assignments[2]).toMatchObject({
       position: 3,
       lane: 2,
+      physicalBatch: "A",
       batchMarker: "A",
+      isBatchMarkerHolder: true,
     });
     expect(assignments[4]).toMatchObject({
       position: 5,
       lane: 1,
+      physicalBatch: "B",
       batchMarker: "B",
+      isBatchMarkerHolder: true,
     });
   });
 
@@ -142,8 +151,9 @@ describe("assignFinisherLanes", () => {
     expect(assignments[3]).toMatchObject({
       position: 4,
       lane: 2,
+      physicalBatch: "A",
     });
-    expect(assignments[3]?.batchMarker).toBeUndefined();
+    expect(assignments[3]?.isBatchMarkerHolder).toBeUndefined();
   });
 
   it("assigns no batch markers when only one lane is configured", () => {
