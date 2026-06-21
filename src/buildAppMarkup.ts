@@ -32,12 +32,20 @@ export function buildAppMarkup(): string {
       <fieldset>
         <legend>Finish Tokens</legend>
         <div class="field">
-          <label for="tokens-per-minute">Tokens per minute per volunteer</label>
+          <label for="tokens-per-minute">Tokens per minute (active volunteer)</label>
           <input id="tokens-per-minute" type="number" min="1" step="1" value="${DEFAULT_FINISH_TOKENS_SETTINGS.tokensPerMinutePerVolunteer}" />
         </div>
         <div class="field">
-          <label for="volunteer-count">Finish Tokens volunteers</label>
+          <label for="volunteer-count">Finish Tokens volunteers in rotation</label>
           <input id="volunteer-count" type="number" min="1" step="1" value="${DEFAULT_FINISH_TOKENS_SETTINGS.volunteerCount}" />
+        </div>
+        <div class="field">
+          <label for="token-supply-batch-size">Token supply batch size</label>
+          <input id="token-supply-batch-size" type="number" min="1" step="1" value="${DEFAULT_FINISH_TOKENS_SETTINGS.tokenSupplyBatchSize}" />
+        </div>
+        <div class="field">
+          <label for="token-supply-fetch-delay">Token supply fetch delay (s)</label>
+          <input id="token-supply-fetch-delay" type="number" min="0" step="1" value="${DEFAULT_FINISH_TOKENS_SETTINGS.tokenSupplyFetchDelaySeconds}" />
         </div>
       </fieldset>
       <fieldset>

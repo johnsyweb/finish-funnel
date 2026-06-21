@@ -29,6 +29,7 @@ import {
   maximumFinisherSpacingMetres,
 } from "./finisherSpacingLimits";
 import { fixtureLayoutDefaults } from "./fixtureLayoutDefaults";
+import { fixtureTokenDefaults } from "./fixtureTokenDefaults";
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import { orderFixturesForDisplay } from "./orderFixturesForDisplay";
@@ -39,6 +40,7 @@ import {
 import { resolveCallout } from "./resolveCallout";
 import type { BatchMarkerMoment } from "./batchMarkerMoments";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
+import type { FinishTokensSettings } from "./types";
 
 type EventFixture = {
   id: string;
@@ -51,6 +53,9 @@ type EventFixture = {
 const fixtures: EventFixture[] = orderFixturesForDisplay([
   await fetch("/fixtures/bushy-1095.json").then((response) => response.json()),
   await fetch("/fixtures/mernda-400.json").then((response) => response.json()),
+  await fetch("/fixtures/albert-melbourne-693.json").then((response) =>
+    response.json(),
+  ),
 ]);
 
 const app = document.querySelector<HTMLElement>("#app");
@@ -65,6 +70,12 @@ const tokensPerMinuteInput =
   document.querySelector<HTMLInputElement>("#tokens-per-minute")!;
 const volunteerCountInput =
   document.querySelector<HTMLInputElement>("#volunteer-count")!;
+const tokenSupplyBatchSizeInput = document.querySelector<HTMLInputElement>(
+  "#token-supply-batch-size",
+)!;
+const tokenSupplyFetchDelayInput = document.querySelector<HTMLInputElement>(
+  "#token-supply-fetch-delay",
+)!;
 const finisherSpacingInput =
   document.querySelector<HTMLInputElement>("#finisher-spacing")!;
 const decelerationZoneInput =
@@ -165,11 +176,27 @@ function applyFixtureLayoutDefaults(fixtureId: string): void {
   laneLengthInput.value = String(defaults.laneLengthMetres);
 }
 
+function applyFixtureTokenDefaults(fixtureId: string): void {
+  const defaults = fixtureTokenDefaults(fixtureId);
+  tokenSupplyBatchSizeInput.value = String(defaults.tokenSupplyBatchSize);
+}
+
+function readFinishTokensSettings() {
+  return {
+    tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
+    volunteerCount: readNumberInput(volunteerCountInput, 1),
+    tokenSupplyBatchSize: readNumberInput(tokenSupplyBatchSizeInput, 100),
+    tokenSupplyFetchDelaySeconds: readNumberInput(
+      tokenSupplyFetchDelayInput,
+      30,
+    ),
+  };
+}
+
 function currentSimulationStateKey(fixtureId: string): string {
   return JSON.stringify({
     fixtureId,
-    tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
-    volunteerCount: readNumberInput(volunteerCountInput, 1),
+    ...readFinishTokensSettings(),
     finisherSpacingMetres: readFinisherSpacingMetres(),
     decelerationZoneMetres: readDecelerationZoneMetres(),
   });
@@ -177,10 +204,7 @@ function currentSimulationStateKey(fixtureId: string): string {
 
 function renderQueueVisualisation(
   fixture: EventFixture,
-  finishTokensSettings: {
-    tokensPerMinutePerVolunteer: number;
-    volunteerCount: number;
-  },
+  finishTokensSettings: FinishTokensSettings,
   layout: {
     laneCount: number;
     laneLengthMetres: number;
@@ -228,10 +252,7 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
   syncFinisherSpacingInput();
 
   const fixture = selectedFixture();
-  const finishTokensSettings = {
-    tokensPerMinutePerVolunteer: readNumberInput(tokensPerMinuteInput, 15),
-    volunteerCount: readNumberInput(volunteerCountInput, 1),
-  };
+  const finishTokensSettings = readFinishTokensSettings();
   const finisherSpacingMetres = readFinisherSpacingMetres();
   const decelerationZoneMetres = readDecelerationZoneMetres();
   const laneCount = readNumberInput(laneCountInput, 1);
@@ -297,6 +318,7 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
     peakQueueDepth: result.peakQueueDepth,
     proposedMultiLaneLayout,
     finishLineBackupDelays: result.finishLineBackupDelays,
+    tokenSupplyGaps: result.tokenSupplyGaps,
   });
 
   chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
@@ -319,6 +341,8 @@ function render(resetSelectedMoment = false, resetQueuePage = false): void {
 for (const element of [
   tokensPerMinuteInput,
   volunteerCountInput,
+  tokenSupplyBatchSizeInput,
+  tokenSupplyFetchDelayInput,
   finisherSpacingInput,
   decelerationZoneInput,
 ]) {
@@ -329,6 +353,7 @@ for (const element of [laneCountInput, laneLengthInput]) {
 }
 eventSelect.addEventListener("change", () => {
   applyFixtureLayoutDefaults(eventSelect.value);
+  applyFixtureTokenDefaults(eventSelect.value);
   render(true);
 });
 queueSearchInput.addEventListener("input", () => render(false, true));
@@ -363,4 +388,6 @@ attachChartMomentControls({
   },
 });
 
+applyFixtureLayoutDefaults(DEFAULT_FIXTURE_ID);
+applyFixtureTokenDefaults(DEFAULT_FIXTURE_ID);
 render(true);

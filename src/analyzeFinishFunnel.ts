@@ -9,6 +9,7 @@ import {
 } from "./defaults";
 import { clampFinisherSpacingMetres } from "./finisherSpacingLimits";
 import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
+import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
 import { finishLineBackupDelaySummary } from "./finishLineBackupDelays";
 import { checkProposedMultiLaneLayout } from "./multiLaneFunnel";
 import type { ProposedMultiLaneLayoutCheck } from "./multiLaneFunnel";
@@ -41,6 +42,7 @@ export type AnalyzeFinishFunnelResult = {
   batchMarkerMoments: BatchMarkerMoment[];
   finishLineBackupModelled: boolean;
   finishLineBackupDelays?: FinishLineBackupDelaySummary;
+  tokenSupplyGaps?: TokenSupplyGapSummary;
 };
 
 export function buildFinisherArrivals(
@@ -132,5 +134,6 @@ export function analyzeFinishFunnel(
     batchMarkerMoments,
     finishLineBackupModelled: simulation.finishLineBackupModelled,
     finishLineBackupDelays,
+    tokenSupplyGaps: simulation.tokenSupplyGaps,
   };
 }

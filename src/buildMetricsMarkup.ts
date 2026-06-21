@@ -1,4 +1,5 @@
 import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
+import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import type { ProposedMultiLaneLayoutCheck } from "./multiLaneFunnel";
 
@@ -6,10 +7,12 @@ export function buildMetricsMarkup({
   peakQueueDepth,
   proposedMultiLaneLayout,
   finishLineBackupDelays,
+  tokenSupplyGaps,
 }: {
   peakQueueDepth: number;
   proposedMultiLaneLayout: ProposedMultiLaneLayoutCheck;
   finishLineBackupDelays?: FinishLineBackupDelaySummary;
+  tokenSupplyGaps?: TokenSupplyGapSummary;
 }): string {
   const adequacyText = proposedMultiLaneLayout.sufficient
     ? `Sufficient (${proposedMultiLaneLayout.headroomFinishers} finisher headroom)`
@@ -24,6 +27,16 @@ export function buildMetricsMarkup({
       <strong>${formatFinishClockTime(finishLineBackupDelays.maxDelaySeconds)}</strong>
       max · ${formatFinishClockTime(finishLineBackupDelays.averageDelaySeconds)} avg
       (${finishLineBackupDelays.delayedFinisherCount} finishers)
+    </div>`;
+
+  const tokenSupplyGapMarkup =
+    tokenSupplyGaps === undefined
+      ? ""
+      : `
+    <div class="metric">
+      <span>Token supply gaps</span>
+      <strong>${formatFinishClockTime(tokenSupplyGaps.totalPauseSeconds)}</strong>
+      total · ${tokenSupplyGaps.gapCount} gaps
     </div>`;
 
   return `
@@ -45,6 +58,6 @@ export function buildMetricsMarkup({
     <div class="metric adequacy ${proposedMultiLaneLayout.sufficient ? "ok" : "bad"}">
       <span>Proposed layout</span>
       <strong>${adequacyText}</strong>
-    </div>${finishLineBackupMarkup}
+    </div>${finishLineBackupMarkup}${tokenSupplyGapMarkup}
   `;
 }

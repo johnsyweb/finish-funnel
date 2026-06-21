@@ -60,4 +60,25 @@ describe("buildMetricsMarkup", () => {
     expect(markup).toContain("0:45");
     expect(markup).toContain("256 finishers");
   });
+
+  it("shows token supply gap metrics when handover paused for batch fetches", () => {
+    const markup = buildMetricsMarkup({
+      peakQueueDepth: 12,
+      proposedMultiLaneLayout: {
+        sufficient: true,
+        combinedLaneCapacity: 520,
+        headroomFinishers: 8,
+        shortfallFinishers: 0,
+        minimumLanesRequired: 2,
+      },
+      tokenSupplyGaps: {
+        gapCount: 4,
+        totalPauseSeconds: 120,
+      },
+    });
+
+    expect(markup).toContain("Token supply gaps");
+    expect(markup).toContain("2:00");
+    expect(markup).toContain("4 gaps");
+  });
 });
