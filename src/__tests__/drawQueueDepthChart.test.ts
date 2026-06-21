@@ -40,7 +40,7 @@ describe("drawQueueDepthChart", () => {
         { timeSeconds: 1200, queueDepth: 0 },
         { timeSeconds: 1260, queueDepth: 4 },
       ],
-      { peakQueueDepth: 4, proposedQueueCapacity: 3 },
+      { peakQueueDepth: 4, recommendedQueueCapacity: 3 },
     );
 
     expect(canvas.width).toBe(640);

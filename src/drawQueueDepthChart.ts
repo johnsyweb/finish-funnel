@@ -13,10 +13,27 @@ export type QueueChartPoint = {
 
 export type QueueChartOptions = {
   peakQueueDepth: number;
+  recommendedQueueCapacity?: number;
   proposedQueueCapacity?: number;
   selectedMomentSeconds?: number;
   batchMarkerMoments?: BatchMarkerMoment[];
 };
+
+function drawCapacityReferenceLine(
+  context: CanvasRenderingContext2D,
+  width: number,
+  padding: { left: number; right: number },
+  y: number,
+  colour: string,
+): void {
+  context.strokeStyle = colour;
+  context.setLineDash([6, 6]);
+  context.beginPath();
+  context.moveTo(padding.left, y);
+  context.lineTo(width - padding.right, y);
+  context.stroke();
+  context.setLineDash([]);
+}
 
 export function drawQueueDepthChart(
   canvas: HTMLCanvasElement,
@@ -41,6 +58,7 @@ export function drawQueueDepthChart(
   const maxTime = range.maxTimeSeconds;
   const maxDepth = Math.max(
     options.peakQueueDepth,
+    options.recommendedQueueCapacity ?? 0,
     options.proposedQueueCapacity ?? 0,
     1,
   );
@@ -83,15 +101,27 @@ export function drawQueueDepthChart(
   }
   context.stroke();
 
-  if (options.proposedQueueCapacity !== undefined) {
-    const y = yForDepth(options.proposedQueueCapacity);
-    context.strokeStyle = "#53ba9d";
-    context.setLineDash([6, 6]);
-    context.beginPath();
-    context.moveTo(padding.left, y);
-    context.lineTo(width - padding.right, y);
-    context.stroke();
-    context.setLineDash([]);
+  if (options.recommendedQueueCapacity !== undefined) {
+    drawCapacityReferenceLine(
+      context,
+      width,
+      padding,
+      yForDepth(options.recommendedQueueCapacity),
+      "#53ba9d",
+    );
+  }
+
+  if (
+    options.proposedQueueCapacity !== undefined &&
+    options.proposedQueueCapacity !== options.recommendedQueueCapacity
+  ) {
+    drawCapacityReferenceLine(
+      context,
+      width,
+      padding,
+      yForDepth(options.proposedQueueCapacity),
+      "#a78bfa",
+    );
   }
 
   const peakY = yForDepth(options.peakQueueDepth);

@@ -17,6 +17,10 @@ import {
   type ChartTimeRange,
 } from "./chartMomentMapping";
 import {
+  clampProposedFunnelToSiteConstraints,
+  proposedFunnelMatchesRecommendation,
+} from "./clampProposedFunnel";
+import {
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISHER_SPACING_METRES,
   DEFAULT_FIXTURE_ID,
@@ -35,6 +39,7 @@ import { firstMomentAtPeakQueueDepth } from "./eventResultsAtMoment";
 import { resolveCallout } from "./resolveCallout";
 import type { BatchMarkerMoment } from "./batchMarkerMoments";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
+import type { RecommendedFunnelLayout } from "./recommendFunnelLayout";
 import type { FinishTokensSettings } from "./types";
 
 type EventFixture = {
@@ -71,13 +76,22 @@ const tokenSupplyBatchSizeInput = document.querySelector<HTMLInputElement>(
 const tokenSupplyFetchDelayInput = document.querySelector<HTMLInputElement>(
   "#token-supply-fetch-delay",
 )!;
-const finisherSpacingInput =
-  document.querySelector<HTMLInputElement>("#finisher-spacing")!;
+const maximumLaneLengthInput = document.querySelector<HTMLInputElement>(
+  "#maximum-lane-length",
+)!;
+const maximumLaneCountInput = document.querySelector<HTMLInputElement>(
+  "#maximum-lane-count",
+)!;
 const decelerationZoneInput =
   document.querySelector<HTMLInputElement>("#deceleration-zone")!;
-const laneCountInput = document.querySelector<HTMLInputElement>("#lane-count")!;
-const laneLengthInput =
-  document.querySelector<HTMLInputElement>("#lane-length")!;
+const finisherSpacingInput =
+  document.querySelector<HTMLInputElement>("#finisher-spacing")!;
+const proposedLaneCountInput = document.querySelector<HTMLInputElement>(
+  "#proposed-lane-count",
+)!;
+const proposedLaneLengthInput = document.querySelector<HTMLInputElement>(
+  "#proposed-lane-length",
+)!;
 const callout = document.querySelector<HTMLDivElement>("#callout")!;
 const metrics = document.querySelector<HTMLDivElement>("#metrics")!;
 const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
@@ -105,7 +119,7 @@ for (const fixture of fixtures) {
 eventSelect.value = DEFAULT_FIXTURE_ID;
 
 let selectedMomentSeconds = 0;
-let simulationStateKey = "";
+let layoutStateKey = "";
 let chartTimeRange: ChartTimeRange = { minTimeSeconds: 0, maxTimeSeconds: 0 };
 let batchMarkerMoments: BatchMarkerMoment[] = [];
 
@@ -121,21 +135,54 @@ function readDecelerationZoneMetres(): number {
   );
 }
 
-function readLaneLengthMetres(): number {
-  return readNumberInput(laneLengthInput, 30);
+function readMaximumLaneLengthMetres(): number {
+  return readNumberInput(maximumLaneLengthInput, 30);
+}
+
+function readMaximumLaneCount(): number {
+  return readNumberInput(maximumLaneCountInput, 1);
+}
+
+function readSiteConstraints() {
+  return {
+    maximumLaneLengthMetres: readMaximumLaneLengthMetres(),
+    maximumLaneCount: readMaximumLaneCount(),
+  };
+}
+
+function readProposedFunnelRaw() {
+  return {
+    laneCount: readNumberInput(proposedLaneCountInput, 1),
+    laneLengthMetres: readNumberInput(proposedLaneLengthInput, 30),
+  };
+}
+
+function readProposedFunnel() {
+  return clampProposedFunnelToSiteConstraints({
+    ...readProposedFunnelRaw(),
+    ...readSiteConstraints(),
+  });
+}
+
+function writeProposedFunnel(proposed: {
+  laneCount: number;
+  laneLengthMetres: number;
+}): void {
+  proposedLaneCountInput.value = String(proposed.laneCount);
+  proposedLaneLengthInput.value = String(proposed.laneLengthMetres);
 }
 
 function readFinisherSpacingMetres(): number {
   return finisherSpacingMetresFromInput({
     rawValue: finisherSpacingInput.value,
     fallback: DEFAULT_FINISHER_SPACING_METRES,
-    laneLengthMetres: readLaneLengthMetres(),
+    laneLengthMetres: readProposedFunnel().laneLengthMetres,
     decelerationZoneMetres: readDecelerationZoneMetres(),
   });
 }
 
 function syncFinisherSpacingInput(): void {
-  const laneLengthMetres = readLaneLengthMetres();
+  const { laneLengthMetres } = readProposedFunnel();
   const decelerationZoneMetres = readDecelerationZoneMetres();
   const maximum = maximumFinisherSpacingMetres({
     laneLengthMetres,
@@ -158,10 +205,19 @@ function selectedFixture(): EventFixture {
   return fixture;
 }
 
-function applyFixtureLayoutDefaults(fixtureId: string): void {
+function applySiteConstraintDefaults(fixtureId: string): void {
   const defaults = fixtureLayoutDefaults(fixtureId);
-  laneCountInput.value = String(defaults.laneCount);
-  laneLengthInput.value = String(defaults.laneLengthMetres);
+  maximumLaneCountInput.value = String(defaults.maximumLaneCount);
+  maximumLaneLengthInput.value = String(defaults.maximumLaneLengthMetres);
+}
+
+function applyRecommendedToProposed(
+  recommendation: RecommendedFunnelLayout,
+): void {
+  writeProposedFunnel({
+    laneCount: recommendation.laneCount,
+    laneLengthMetres: recommendation.laneLengthMetres,
+  });
 }
 
 function applyFixtureTokenDefaults(fixtureId: string): void {
@@ -181,12 +237,13 @@ function readFinishTokensSettings() {
   };
 }
 
-function currentSimulationStateKey(fixtureId: string): string {
+function currentLayoutStateKey(fixtureId: string): string {
   return JSON.stringify({
     fixtureId,
     ...readFinishTokensSettings(),
-    finisherSpacingMetres: readFinisherSpacingMetres(),
+    finisherSpacingInput: finisherSpacingInput.value,
     decelerationZoneMetres: readDecelerationZoneMetres(),
+    ...readSiteConstraints(),
   });
 }
 
@@ -228,23 +285,45 @@ function renderQueueVisualisation(
 }
 
 function render(resetSelectedMoment = false): void {
-  syncFinisherSpacingInput();
-
   const fixture = selectedFixture();
   const finishTokensSettings = readFinishTokensSettings();
-  const finisherSpacingMetres = readFinisherSpacingMetres();
   const decelerationZoneMetres = readDecelerationZoneMetres();
-  const laneCount = readNumberInput(laneCountInput, 1);
-  const laneLengthMetres = readLaneLengthMetres();
-  const nextSimulationStateKey = currentSimulationStateKey(fixture.id);
+  const siteConstraints = readSiteConstraints();
+  const nextLayoutStateKey = currentLayoutStateKey(fixture.id);
+  const layoutChanged = nextLayoutStateKey !== layoutStateKey;
+
+  if (layoutChanged) {
+    const preview = analyzeFinishFunnel({
+      finishers: fixture.finishers,
+      finishTokensSettings,
+      decelerationZoneMetres,
+      finisherSpacingMetres: readFinisherSpacingMetres(),
+      ...siteConstraints,
+      ...readProposedFunnelRaw(),
+    });
+
+    if (preview.recommendedFunnelLayout !== undefined) {
+      applyRecommendedToProposed(preview.recommendedFunnelLayout);
+    }
+
+    layoutStateKey = nextLayoutStateKey;
+  }
+
+  syncFinisherSpacingInput();
+
+  const proposedFunnel = readProposedFunnel();
+  writeProposedFunnel(proposedFunnel);
+
+  const finisherSpacingMetres = readFinisherSpacingMetres();
 
   const result = analyzeFinishFunnel({
     finishers: fixture.finishers,
     finishTokensSettings,
     decelerationZoneMetres,
     finisherSpacingMetres,
-    laneCount,
-    laneLengthMetres,
+    ...siteConstraints,
+    laneCount: proposedFunnel.laneCount,
+    laneLengthMetres: proposedFunnel.laneLengthMetres,
   });
 
   chartTimeRange = timeRangeFromChartPoints(result.queueDepthOverTime);
@@ -254,15 +333,23 @@ function render(resetSelectedMoment = false): void {
     result.peakQueueDepth,
   );
 
-  if (resetSelectedMoment || nextSimulationStateKey !== simulationStateKey) {
+  if (resetSelectedMoment || layoutChanged) {
     selectedMomentSeconds = peakMoment;
-    simulationStateKey = nextSimulationStateKey;
   }
 
   selectedMomentSeconds = clampSelectedMoment(
     selectedMomentSeconds,
     chartTimeRange,
   );
+
+  const recommendedFunnelLayout = result.recommendedFunnelLayout ?? {
+    laneCount: proposedFunnel.laneCount,
+    laneLengthMetres: proposedFunnel.laneLengthMetres,
+    sufficient: true,
+    combinedLaneCapacity: 0,
+    headroomFinishers: 0,
+    shortfallFinishers: 0,
+  };
 
   const proposedMultiLaneLayout = result.proposedMultiLaneLayout ?? {
     sufficient: true,
@@ -271,6 +358,11 @@ function render(resetSelectedMoment = false): void {
     shortfallFinishers: 0,
     minimumLanesRequired: 0,
   };
+
+  const proposedMatchesRecommendation = proposedFunnelMatchesRecommendation(
+    proposedFunnel,
+    recommendedFunnelLayout,
+  );
 
   const calloutState = resolveCallout({
     funnelNotRequired: result.funnelNotRequired,
@@ -289,23 +381,30 @@ function render(resetSelectedMoment = false): void {
 
   metrics.innerHTML = buildMetricsMarkup({
     peakQueueDepth: result.peakQueueDepth,
+    recommendedFunnelLayout,
     proposedMultiLaneLayout,
+    proposedMatchesRecommendation,
     finishLineBackupDelays: result.finishLineBackupDelays,
     tokenSupplyGaps: result.tokenSupplyGaps,
   });
 
   chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
 
+  const proposedQueueCapacity = proposedMatchesRecommendation
+    ? undefined
+    : proposedMultiLaneLayout.combinedLaneCapacity;
+
   drawQueueDepthChart(chartCanvas, result.queueDepthOverTime, {
     peakQueueDepth: result.peakQueueDepth,
-    proposedQueueCapacity: proposedMultiLaneLayout.combinedLaneCapacity,
+    recommendedQueueCapacity: recommendedFunnelLayout.combinedLaneCapacity,
+    proposedQueueCapacity,
     selectedMomentSeconds,
     batchMarkerMoments,
   });
 
   renderQueueVisualisation(fixture, finishTokensSettings, {
-    laneCount,
-    laneLengthMetres,
+    laneCount: proposedFunnel.laneCount,
+    laneLengthMetres: proposedFunnel.laneLengthMetres,
     decelerationZoneMetres,
     finisherSpacingMetres,
   });
@@ -318,14 +417,18 @@ for (const element of [
   tokenSupplyFetchDelayInput,
   finisherSpacingInput,
   decelerationZoneInput,
+  maximumLaneLengthInput,
+  maximumLaneCountInput,
 ]) {
   element.addEventListener("input", () => render(true));
 }
-for (const element of [laneCountInput, laneLengthInput]) {
+
+for (const element of [proposedLaneCountInput, proposedLaneLengthInput]) {
   element.addEventListener("input", () => render());
 }
+
 eventSelect.addEventListener("change", () => {
-  applyFixtureLayoutDefaults(eventSelect.value);
+  applySiteConstraintDefaults(eventSelect.value);
   applyFixtureTokenDefaults(eventSelect.value);
   render(true);
 });
@@ -343,6 +446,6 @@ attachChartMomentControls({
   },
 });
 
-applyFixtureLayoutDefaults(DEFAULT_FIXTURE_ID);
+applySiteConstraintDefaults(DEFAULT_FIXTURE_ID);
 applyFixtureTokenDefaults(DEFAULT_FIXTURE_ID);
 render(true);

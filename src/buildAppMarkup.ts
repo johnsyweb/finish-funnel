@@ -49,22 +49,39 @@ export function buildAppMarkup(): string {
         </div>
       </fieldset>
       <fieldset>
-        <legend>Layout</legend>
+        <legend>Site constraints</legend>
         <div class="field">
-          <label for="finisher-spacing">Finisher spacing (m)</label>
-          <input id="finisher-spacing" type="number" min="0.25" step="0.05" value="${DEFAULT_FINISHER_SPACING_METRES}" />
+          <label for="maximum-lane-length">Maximum lane length (m)</label>
+          <input id="maximum-lane-length" type="number" min="0" step="1" value="${defaultLayout.maximumLaneLengthMetres}" />
         </div>
+        <div class="field">
+          <label for="maximum-lane-count">Maximum lane count</label>
+          <input id="maximum-lane-count" type="number" min="1" step="1" value="${defaultLayout.maximumLaneCount}" />
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="panel grid two">
+      <fieldset>
+        <legend>Layout assumptions</legend>
         <div class="field">
           <label for="deceleration-zone">Deceleration zone (m)</label>
           <input id="deceleration-zone" type="number" min="0" step="0.5" value="${DEFAULT_DECELERATION_ZONE_METRES}" />
         </div>
         <div class="field">
-          <label for="lane-count">Lane count</label>
-          <input id="lane-count" type="number" min="1" step="1" value="${defaultLayout.laneCount}" />
+          <label for="finisher-spacing">Finisher spacing (m)</label>
+          <input id="finisher-spacing" type="number" min="0.25" step="0.05" value="${DEFAULT_FINISHER_SPACING_METRES}" />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Proposed funnel</legend>
+        <div class="field">
+          <label for="proposed-lane-count">Lane count</label>
+          <input id="proposed-lane-count" type="number" min="1" step="1" value="${defaultLayout.maximumLaneCount}" />
         </div>
         <div class="field">
-          <label for="lane-length">Lane length (m)</label>
-          <input id="lane-length" type="number" min="0" step="1" value="${defaultLayout.laneLengthMetres}" />
+          <label for="proposed-lane-length">Lane length (m)</label>
+          <input id="proposed-lane-length" type="number" min="0" step="1" value="${defaultLayout.maximumLaneLengthMetres}" />
         </div>
       </fieldset>
     </section>

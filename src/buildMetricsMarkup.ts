@@ -1,23 +1,34 @@
 import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
+import type { RecommendedFunnelLayout } from "./recommendFunnelLayout";
 import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import type { ProposedMultiLaneLayoutCheck } from "./multiLaneFunnel";
 
+function adequacyText(adequacy: {
+  sufficient: boolean;
+  headroomFinishers: number;
+  shortfallFinishers: number;
+}): string {
+  return adequacy.sufficient
+    ? `Sufficient (${adequacy.headroomFinishers} finisher headroom)`
+    : `Short by ${adequacy.shortfallFinishers} finishers`;
+}
+
 export function buildMetricsMarkup({
   peakQueueDepth,
+  recommendedFunnelLayout,
   proposedMultiLaneLayout,
+  proposedMatchesRecommendation,
   finishLineBackupDelays,
   tokenSupplyGaps,
 }: {
   peakQueueDepth: number;
+  recommendedFunnelLayout: RecommendedFunnelLayout;
   proposedMultiLaneLayout: ProposedMultiLaneLayoutCheck;
+  proposedMatchesRecommendation: boolean;
   finishLineBackupDelays?: FinishLineBackupDelaySummary;
   tokenSupplyGaps?: TokenSupplyGapSummary;
 }): string {
-  const adequacyText = proposedMultiLaneLayout.sufficient
-    ? `Sufficient (${proposedMultiLaneLayout.headroomFinishers} finisher headroom)`
-    : `Short by ${proposedMultiLaneLayout.shortfallFinishers} finishers`;
-
   const finishLineBackupMarkup =
     finishLineBackupDelays === undefined
       ? ""
@@ -39,6 +50,14 @@ export function buildMetricsMarkup({
       total · ${tokenSupplyGaps.gapCount} gaps
     </div>`;
 
+  const proposedAdequacyMarkup = proposedMatchesRecommendation
+    ? ""
+    : `
+    <div class="metric adequacy ${proposedMultiLaneLayout.sufficient ? "ok" : "bad"}">
+      <span>Proposed layout</span>
+      <strong>${adequacyText(proposedMultiLaneLayout)}</strong>
+    </div>`;
+
   return `
     <div class="metric">
       <span>Peak queue capacity</span>
@@ -46,18 +65,12 @@ export function buildMetricsMarkup({
       finishers
     </div>
     <div class="metric">
-      <span>Minimum lanes required</span>
-      <strong>${proposedMultiLaneLayout.minimumLanesRequired}</strong>
-      at configured lane length
+      <span>Recommended layout</span>
+      <strong>${recommendedFunnelLayout.laneCount} lanes × ${recommendedFunnelLayout.laneLengthMetres} m</strong>
     </div>
-    <div class="metric">
-      <span>Combined lane capacity</span>
-      <strong>${proposedMultiLaneLayout.combinedLaneCapacity}</strong>
-      finishers in proposed layout
-    </div>
-    <div class="metric adequacy ${proposedMultiLaneLayout.sufficient ? "ok" : "bad"}">
-      <span>Proposed layout</span>
-      <strong>${adequacyText}</strong>
-    </div>${finishLineBackupMarkup}${tokenSupplyGapMarkup}
+    <div class="metric adequacy ${recommendedFunnelLayout.sufficient ? "ok" : "bad"}">
+      <span>Recommendation</span>
+      <strong>${adequacyText(recommendedFunnelLayout)}</strong>
+    </div>${proposedAdequacyMarkup}${finishLineBackupMarkup}${tokenSupplyGapMarkup}
   `;
 }

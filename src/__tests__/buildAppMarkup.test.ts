@@ -49,12 +49,15 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain("Search by name or finish position");
   });
 
-  it("includes multi-lane proposed layout inputs", () => {
+  it("includes site constraints and proposed funnel inputs", () => {
     const markup = buildAppMarkup();
 
-    expect(markup).toContain('id="lane-count"');
-    expect(markup).toContain('id="lane-length"');
-    expect(markup).toContain("Lane count");
-    expect(markup).toContain("Lane length (m)");
+    expect(markup).toContain('id="maximum-lane-count"');
+    expect(markup).toContain('id="maximum-lane-length"');
+    expect(markup).toContain('id="proposed-lane-count"');
+    expect(markup).toContain('id="proposed-lane-length"');
+    expect(markup).toContain("Site constraints");
+    expect(markup).toContain("Layout assumptions");
+    expect(markup).toContain("Proposed funnel");
   });
 });
