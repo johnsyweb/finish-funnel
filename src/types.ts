@@ -22,4 +22,5 @@ export type SimulationResult = {
   queueDepthOverTime: Array<{ timeSeconds: number; queueDepth: number }>;
   funnelNotRequired: boolean;
   finisherSchedules: FinisherSchedule[];
+  effectiveArrivals: FinisherArrival[];
 };

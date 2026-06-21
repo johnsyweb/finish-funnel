@@ -56,5 +56,45 @@ describe("simulateFinishFunnel", () => {
         tokenHandoverTimeSeconds: 8,
       },
     ]);
+    expect(result.effectiveArrivals).toEqual([
+      { timeSeconds: 0, position: 1 },
+      { timeSeconds: 0.5, position: 2 },
+    ]);
+  });
+
+  it("caps peak queue depth and delays admission when maxQueueDepth is reached", () => {
+    const result = simulateFinishFunnel(
+      [
+        { timeSeconds: 0, position: 1 },
+        { timeSeconds: 0.5, position: 2 },
+        { timeSeconds: 1, position: 3 },
+      ],
+      DEFAULT_FINISH_TOKENS_SETTINGS,
+      { maxQueueDepth: 2 },
+    );
+
+    expect(result.peakQueueDepth).toBe(2);
+    expect(result.effectiveArrivals).toEqual([
+      { timeSeconds: 0, position: 1 },
+      { timeSeconds: 0.5, position: 2 },
+      { timeSeconds: 4, position: 3 },
+    ]);
+    expect(result.finisherSchedules).toEqual([
+      {
+        position: 1,
+        arrivalTimeSeconds: 0,
+        tokenHandoverTimeSeconds: 4,
+      },
+      {
+        position: 2,
+        arrivalTimeSeconds: 0.5,
+        tokenHandoverTimeSeconds: 8,
+      },
+      {
+        position: 3,
+        arrivalTimeSeconds: 4,
+        tokenHandoverTimeSeconds: 12,
+      },
+    ]);
   });
 });
