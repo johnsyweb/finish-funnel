@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { checkProposedFunnel } from "../checkProposedFunnel";
+import {
+  checkProposedFunnel,
+  proposedFunnelQueueCapacity,
+} from "../checkProposedFunnel";
 import {
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISHER_SPACING_METRES,
@@ -34,5 +37,15 @@ describe("checkProposedFunnel", () => {
       proposedQueueCapacity: 6,
       shortfallFinishers: 4,
     });
+  });
+
+  it("returns zero queue capacity when finisher spacing is zero", () => {
+    expect(
+      proposedFunnelQueueCapacity({
+        proposedMetres: 30,
+        decelerationZoneMetres: DEFAULT_DECELERATION_ZONE_METRES,
+        finisherSpacingMetres: 0,
+      }),
+    ).toBe(0);
   });
 });

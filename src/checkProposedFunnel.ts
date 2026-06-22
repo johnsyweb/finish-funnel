@@ -15,6 +15,10 @@ export function proposedFunnelQueueCapacity({
   finisherSpacingMetres: number;
 }): number {
   const queueMetres = Math.max(0, proposedMetres - decelerationZoneMetres);
+  if (finisherSpacingMetres <= 0) {
+    return 0;
+  }
+
   return Math.floor(queueMetres / finisherSpacingMetres);
 }
 

@@ -29,7 +29,8 @@ import {
 } from "./defaults";
 import {
   finisherSpacingMetresFromInput,
-  maximumFinisherSpacingMetres,
+  shouldImmediatelySyncFinisherSpacing,
+  syncFinisherSpacingInputValue,
 } from "./finisherSpacingLimits";
 import { fixtureLayoutDefaults } from "./fixtureLayoutDefaults";
 import { fixtureTokenDefaults } from "./fixtureTokenDefaults";
@@ -204,19 +205,22 @@ function readFinisherSpacingMetres(): number {
   });
 }
 
-function syncFinisherSpacingInput(): void {
+function syncFinisherSpacingInput(force = false): void {
   const { laneLengthMetres } = readLayout();
   const decelerationZoneMetres = readDecelerationZoneMetres();
-  const maximum = maximumFinisherSpacingMetres({
+  const synced = syncFinisherSpacingInputValue({
+    rawValue: finisherSpacingInput.value,
     laneLengthMetres,
     decelerationZoneMetres,
   });
 
-  finisherSpacingInput.max = String(maximum);
+  finisherSpacingInput.max = synced.max;
 
-  const parsed = Number(finisherSpacingInput.value);
-  if (Number.isFinite(parsed) && parsed > maximum) {
-    finisherSpacingInput.value = String(maximum);
+  if (
+    force ||
+    shouldImmediatelySyncFinisherSpacing(finisherSpacingInput.value, synced)
+  ) {
+    finisherSpacingInput.value = synced.value;
   }
 }
 
@@ -332,7 +336,7 @@ function render(resetSelectedMoment = false): void {
     layoutStateKey = nextLayoutStateKey;
   }
 
-  syncFinisherSpacingInput();
+  syncFinisherSpacingInput(layoutChanged);
 
   const layout = readLayout();
   writeLayout(layout);
@@ -474,6 +478,11 @@ for (const element of [
 }
 
 cordonStakeSpacingInput.addEventListener("input", () => render());
+
+finisherSpacingInput.addEventListener("blur", () => {
+  syncFinisherSpacingInput(true);
+  render();
+});
 
 for (const element of [layoutLaneCountInput, layoutLaneLengthInput]) {
   element.addEventListener("input", () => render());

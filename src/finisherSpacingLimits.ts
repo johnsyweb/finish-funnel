@@ -1,3 +1,5 @@
+import { DEFAULT_FINISHER_SPACING_METRES } from "./defaults";
+
 export const MINIMUM_FINISHER_SPACING_METRES = 0.25;
 
 export function laneQueueZoneMetres({
@@ -62,4 +64,70 @@ export function finisherSpacingMetresFromInput({
     laneLengthMetres,
     decelerationZoneMetres,
   });
+}
+
+export function syncFinisherSpacingInputValue({
+  rawValue,
+  laneLengthMetres,
+  decelerationZoneMetres,
+  fallback = DEFAULT_FINISHER_SPACING_METRES,
+}: {
+  rawValue: string;
+  laneLengthMetres: number;
+  decelerationZoneMetres: number;
+  fallback?: number;
+}): {
+  value: string;
+  max: string;
+  metres: number;
+} {
+  const metres = finisherSpacingMetresFromInput({
+    rawValue,
+    fallback,
+    laneLengthMetres,
+    decelerationZoneMetres,
+  });
+  const maximum = maximumFinisherSpacingMetres({
+    laneLengthMetres,
+    decelerationZoneMetres,
+  });
+  const max = String(Math.max(MINIMUM_FINISHER_SPACING_METRES, maximum));
+
+  return {
+    value: String(metres),
+    max,
+    metres,
+  };
+}
+
+export function shouldImmediatelySyncFinisherSpacing(
+  rawValue: string,
+  synced: { max: string },
+): boolean {
+  if (rawValue === "" || rawValue === "0") {
+    return true;
+  }
+
+  if (/^0\.$/.test(rawValue)) {
+    return false;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) {
+    return true;
+  }
+
+  if (parsed <= 0) {
+    return true;
+  }
+
+  if (parsed > Number(synced.max)) {
+    return true;
+  }
+
+  if (parsed > 0 && parsed < MINIMUM_FINISHER_SPACING_METRES) {
+    return true;
+  }
+
+  return false;
 }
