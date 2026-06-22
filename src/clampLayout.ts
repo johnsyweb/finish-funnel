@@ -1,4 +1,4 @@
-export function clampProposedFunnelToSiteConstraints({
+export function clampLayoutToSiteConstraints({
   laneCount,
   laneLengthMetres,
   maximumLaneCount,
@@ -18,12 +18,12 @@ export function clampProposedFunnelToSiteConstraints({
   };
 }
 
-export function proposedFunnelMatchesRecommendation(
-  proposed: { laneCount: number; laneLengthMetres: number },
-  recommended: { laneCount: number; laneLengthMetres: number },
+export function layoutMatchesModelRecommendation(
+  layout: { laneCount: number; laneLengthMetres: number },
+  modelRecommendation: { laneCount: number; laneLengthMetres: number },
 ): boolean {
   return (
-    proposed.laneCount === recommended.laneCount &&
-    proposed.laneLengthMetres === recommended.laneLengthMetres
+    layout.laneCount === modelRecommendation.laneCount &&
+    layout.laneLengthMetres === modelRecommendation.laneLengthMetres
   );
 }

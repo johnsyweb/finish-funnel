@@ -74,14 +74,17 @@ export function buildAppMarkup(): string {
         </div>
       </fieldset>
       <fieldset>
-        <legend>Proposed funnel</legend>
+        <legend>Layout</legend>
         <div class="field">
-          <label for="proposed-lane-count">Lane count</label>
-          <input id="proposed-lane-count" type="number" min="1" step="1" value="${defaultLayout.maximumLaneCount}" />
+          <label for="layout-lane-count">Lane count</label>
+          <input id="layout-lane-count" type="number" min="1" step="1" value="${defaultLayout.maximumLaneCount}" />
         </div>
         <div class="field">
-          <label for="proposed-lane-length">Lane length (m)</label>
-          <input id="proposed-lane-length" type="number" min="0" step="1" value="${defaultLayout.maximumLaneLengthMetres}" />
+          <label for="layout-lane-length">Lane length (m)</label>
+          <input id="layout-lane-length" type="number" min="0" step="1" value="${defaultLayout.maximumLaneLengthMetres}" />
+        </div>
+        <div class="field">
+          <button type="button" id="reset-to-model-recommendation" hidden>Reset to model recommendation</button>
         </div>
       </fieldset>
     </section>

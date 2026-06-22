@@ -61,11 +61,11 @@ The number of finishers one finish funnel lane can hold: lane physical length mi
 _Avoid_: Lane size, lane length (ambiguous with metres)
 
 **Combined lane capacity**:
-The sum of lane queue capacity across all finish funnel lanes. Compared against peak queue depth to judge whether a multi-lane layout holds everyone at the busiest moment. Shown on the queue depth chart as a horizontal capacity reference line for the **recommended funnel layout**; a second line for the **proposed funnel** appears only when its combined lane capacity differs from the recommendation.
+The sum of lane queue capacity across all finish funnel lanes. Compared against peak queue depth to judge whether a multi-lane layout holds everyone at the busiest moment. Shown on the queue depth chart as a horizontal **layout capacity** reference line; a second **model recommendation capacity** line appears only when the **layout** differs from the **model recommendation**.
 _Avoid_: Total funnel capacity (ambiguous with single-lane queue capacity)
 
 **Minimum lanes required**:
-The smallest lane count at a given per-lane length that provides enough combined lane capacity for peak queue depth: peak queue depth divided by lane queue capacity, rounded up. Used internally when computing the **recommended funnel layout**; not shown as a separate metric when the recommendation is displayed directly.
+The smallest lane count at a given per-lane length that provides enough combined lane capacity for peak queue depth: peak queue depth divided by lane queue capacity, rounded up. Used internally when computing the **model recommendation**; not shown as a separate metric when the layout is displayed directly.
 _Avoid_: Recommended length (ambiguous with metres), lanes needed (informal)
 
 **Funnel not required**:
@@ -113,7 +113,7 @@ A finisher whose published result time is missing or unparseable. Assigned the p
 _Avoid_: Unknown time (describes the data, not the person), missing time
 
 **Site constraints**:
-The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **recommended funnel layout**. Fixture selection sets sensible defaults per course and resets both values when the fixture changes. Changing site constraints, simulation settings, or fixture recomputes the recommendation and re-syncs the **proposed funnel** to match (discarding any what-if override).
+The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **model recommendation**. Fixture selection sets sensible defaults per course and resets both values when the fixture changes. Changing site constraints, simulation settings, or fixture recomputes the model recommendation and re-syncs the **layout** to match (discarding any manual tweak).
 _Avoid_: Course limits (too vague), venue settings
 
 **Maximum lane length**:
@@ -124,13 +124,13 @@ _Avoid_: Lane length (ambiguous with recommended or configured length), availabl
 The most parallel finish funnel lanes the course can physically accommodate along the available roping distance — a hard site constraint. The model's recommended lane count must not exceed this limit. Fixture selection sets a sensible default per course (e.g. Bushy: 3; Albert Melbourne: 2; Mernda: 1).
 _Avoid_: Lane limit (too informal), max lanes (ambiguous with recommended lane count)
 
-**Recommended funnel layout**:
-The finish funnel layout the model recommends for the simulated event: a lane count and total per-lane physical length (including deceleration zone) that hold peak queue depth without finish-line backup, subject to **maximum lane length** and **maximum lane count**. Chosen by taking the fewest lanes that fit within both constraints, then the shortest per-lane length (rounded up to whole metres) that still provides enough combined capacity — not necessarily the full maximum lane length when less rope suffices. When peak queue depth cannot be held even at maximum lane count and maximum lane length, the recommendation uses both maxima and the shortfall is stated explicitly. When **funnel not required** applies, still recommends one lane at the shortest length that holds peak queue depth.
-_Avoid_: Optimal layout, suggested setup (too vague)
+**Model recommendation**:
+The finish funnel layout the model calculates for the simulated event: a lane count and total per-lane physical length (including deceleration zone) that hold peak queue depth without finish-line backup, subject to **maximum lane length** and **maximum lane count**. Chosen by taking the fewest lanes that fit within both constraints, then the shortest per-lane length (rounded up to whole metres) that still provides enough combined capacity — not necessarily the full maximum lane length when less rope suffices. When peak queue depth cannot be held even at maximum lane count and maximum lane length, the model recommendation uses both maxima and the shortfall is stated explicitly. When **funnel not required** applies, still recommends one lane at the shortest length that holds peak queue depth. Pre-fills the **layout**; shown separately for comparison only when the event team has tweaked the layout away from this value.
+_Avoid_: Recommended layout (ambiguous with editable layout), optimal layout
 
-**Proposed funnel**:
-A finish funnel layout used to simulate and compare against the simulated peak queue: lane count and total per-lane physical length in metres (including deceleration zone). Pre-filled from the **recommended funnel layout**; the event team may override either value to explore what-if alternatives within **site constraints** (lane count and length cannot exceed the configured maximums). The tool derives combined lane capacity using deceleration zone and finisher spacing, then reports sufficiency with headroom or shortfall. Drives queue visualisation; a capacity reference line on the queue depth chart appears only when proposed combined lane capacity differs from the recommendation.
-_Avoid_: Current setup, existing funnel, proposed capacity
+**Layout**:
+The finish funnel layout the event team configures for simulation and queue visualisation: lane count and total per-lane physical length in metres (including deceleration zone). Pre-filled from the **model recommendation**; the event team may tweak either value within **site constraints** (lane count and length cannot exceed the configured maximums). Drives combined lane capacity, finish-line backup simulation, queue visualisation, and chart capacity reference lines. When layout matches the model recommendation, only layout adequacy is shown; when tweaked, the model recommendation is shown alongside for comparison. A **Reset to model recommendation** control appears in the layout inputs when the two differ.
+_Avoid_: Proposed funnel, configured layout (too vague), current setup
 
 **Event results**:
 The finish position, name, and published finish time for each finisher from a parkrun event results page. Loaded from a bundled fixture in v1; later from a results-page userscript. Parsed and Unknown-handled in finish-funnel first; proven logic ported to tampermonkey-parkrun when the userscript ships.
@@ -157,11 +157,11 @@ The queue depth over finish time plot. Shows queue depth through the event, hori
 _Avoid_: Timeline, finish chart (too vague)
 
 **Chart legend**:
-The key below the queue depth chart naming each visual element currently shown on the plot, with a swatch matching the chart line style and colour — solid or dashed horizontal strokes for series and reference lines, a vertical stroke for batch marker moments. Labels: **Queue depth**, **Peak queue capacity**, **Recommended capacity**, **Proposed capacity** (when shown), **Batch marker moment** (multi-lane only). Lists only visible elements. Does not include the selected-moment indicator (shown separately above the chart).
+The key below the queue depth chart naming each visual element currently shown on the plot, with a swatch matching the chart line style and colour — solid or dashed horizontal strokes for series and reference lines, a vertical stroke for batch marker moments. Labels: **Queue depth**, **Peak queue capacity**, **Layout capacity**, **Model recommendation capacity** (when layout differs), **Batch marker moment** (multi-lane only). Lists only visible elements. Does not include the selected-moment indicator (shown separately above the chart).
 _Avoid_: Key (too generic), chart labels (ambiguous with axis labels)
 
 **Selected moment**:
-The clock finish time chosen on the queue depth chart. Queue membership and per-finisher wait metrics are evaluated at this instant. Set by clicking or dragging on the chart; nudged with arrow keys when the chart has focus; jumped to the previous or next batch marker moment with Page Up or Page Down when the chart has focus. Shown as a vertical indicator and readable clock time on the chart. Defaults to the first moment peak queue depth is reached; resets to that moment whenever simulation settings change. Changing proposed funnel lane layout does not reset the selected moment.
+The clock finish time chosen on the queue depth chart. Queue membership and per-finisher wait metrics are evaluated at this instant. Set by clicking or dragging on the chart; nudged with arrow keys when the chart has focus; jumped to the previous or next batch marker moment with Page Up or Page Down when the chart has focus. Shown as a vertical indicator and readable clock time on the chart. Defaults to the first moment peak queue depth is reached; resets to that moment whenever simulation settings change. Changing **layout** lane count or length does not reset the selected moment.
 _Avoid_: Scrub time, cursor time, selected time (ambiguous with published finish time)
 
 **Queued finisher**:

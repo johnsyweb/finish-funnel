@@ -13,8 +13,8 @@ export type QueueChartPoint = {
 
 export type QueueChartOptions = {
   peakQueueDepth: number;
-  recommendedQueueCapacity?: number;
-  proposedQueueCapacity?: number;
+  layoutQueueCapacity?: number;
+  modelRecommendationQueueCapacity?: number;
   selectedMomentSeconds?: number;
   batchMarkerMoments?: BatchMarkerMoment[];
 };
@@ -58,8 +58,8 @@ export function drawQueueDepthChart(
   const maxTime = range.maxTimeSeconds;
   const maxDepth = Math.max(
     options.peakQueueDepth,
-    options.recommendedQueueCapacity ?? 0,
-    options.proposedQueueCapacity ?? 0,
+    options.layoutQueueCapacity ?? 0,
+    options.modelRecommendationQueueCapacity ?? 0,
     1,
   );
 
@@ -101,25 +101,22 @@ export function drawQueueDepthChart(
   }
   context.stroke();
 
-  if (options.recommendedQueueCapacity !== undefined) {
+  if (options.layoutQueueCapacity !== undefined) {
     drawCapacityReferenceLine(
       context,
       width,
       padding,
-      yForDepth(options.recommendedQueueCapacity),
+      yForDepth(options.layoutQueueCapacity),
       "#53ba9d",
     );
   }
 
-  if (
-    options.proposedQueueCapacity !== undefined &&
-    options.proposedQueueCapacity !== options.recommendedQueueCapacity
-  ) {
+  if (options.modelRecommendationQueueCapacity !== undefined) {
     drawCapacityReferenceLine(
       context,
       width,
       padding,
-      yForDepth(options.proposedQueueCapacity),
+      yForDepth(options.modelRecommendationQueueCapacity),
       "#a78bfa",
     );
   }

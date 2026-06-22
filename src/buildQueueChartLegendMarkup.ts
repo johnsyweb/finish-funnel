@@ -1,8 +1,8 @@
 export type QueueChartLegendSwatch =
   | "queue-depth"
   | "peak-capacity"
-  | "recommended-capacity"
-  | "proposed-capacity"
+  | "layout-capacity"
+  | "model-recommendation-capacity"
   | "batch-marker-moment";
 
 export type QueueChartLegendItem = {
@@ -11,12 +11,12 @@ export type QueueChartLegendItem = {
 };
 
 export function queueChartLegendItems({
-  recommendedQueueCapacity,
-  proposedQueueCapacity,
+  layoutQueueCapacity,
+  modelRecommendationQueueCapacity,
   batchMarkerMomentCount,
 }: {
-  recommendedQueueCapacity?: number;
-  proposedQueueCapacity?: number;
+  layoutQueueCapacity?: number;
+  modelRecommendationQueueCapacity?: number;
   batchMarkerMomentCount: number;
 }): QueueChartLegendItem[] {
   const items: QueueChartLegendItem[] = [
@@ -24,17 +24,17 @@ export function queueChartLegendItems({
     { label: "Peak queue capacity", swatch: "peak-capacity" },
   ];
 
-  if (recommendedQueueCapacity !== undefined) {
+  if (layoutQueueCapacity !== undefined) {
     items.push({
-      label: "Recommended capacity",
-      swatch: "recommended-capacity",
+      label: "Layout capacity",
+      swatch: "layout-capacity",
     });
   }
 
-  if (proposedQueueCapacity !== undefined) {
+  if (modelRecommendationQueueCapacity !== undefined) {
     items.push({
-      label: "Proposed capacity",
-      swatch: "proposed-capacity",
+      label: "Model recommendation capacity",
+      swatch: "model-recommendation-capacity",
     });
   }
 

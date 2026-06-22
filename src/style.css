@@ -116,6 +116,11 @@ select {
   color: var(--accent);
 }
 
+.metric.model-recommendation strong {
+  font-size: 1rem;
+  color: var(--text);
+}
+
 .callout {
   border-left: 4px solid var(--ok);
   padding: 0.75rem 1rem;
@@ -181,13 +186,13 @@ select {
   border-top: 2px dashed #ff6b6b;
 }
 
-.chart-legend-swatch--recommended-capacity {
+.chart-legend-swatch--layout-capacity {
   width: 1.5rem;
   height: 0;
   border-top: 2px dashed #53ba9d;
 }
 
-.chart-legend-swatch--proposed-capacity {
+.chart-legend-swatch--model-recommendation-capacity {
   width: 1.5rem;
   height: 0;
   border-top: 2px dashed #a78bfa;

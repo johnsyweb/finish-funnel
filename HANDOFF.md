@@ -147,11 +147,9 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 ### Site constraints and recommended layout (done — 2026-06-21)
 
 - **Site constraints** inputs: maximum lane length (total incl. deceleration), maximum lane count
-- `recommendFunnelLayout` outputs recommended lane count and per-lane length with explicit adequacy
-- **Layout assumptions**: deceleration zone, finisher spacing (single-file lanes)
-- **Proposed funnel** pre-filled from recommendation, clamped to site constraints, re-syncs on settings change
-- Metrics show recommended layout; proposed adequacy only when what-if differs
-- Chart: recommended capacity reference line; proposed line only when different
+- `recommendFunnelLayout` outputs **model recommendation** (lane count and per-lane length) with explicit adequacy
+- **Layout** fieldset (editable, clamped to site constraints) replaces proposed funnel; **Reset to model recommendation** when tweaked
+- Metrics and chart show layout vs model recommendation only when they differ
 - Peak queue capacity from uncapped simulation
 
 ### Queue depth chart legend (done — 2026-06-21)

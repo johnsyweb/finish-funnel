@@ -10,6 +10,8 @@ export type RecommendedFunnelLayout = FunnelLayoutAdequacy & {
   laneLengthMetres: number;
 };
 
+export type ModelRecommendation = RecommendedFunnelLayout;
+
 export function minimumLaneLengthMetres({
   laneCount,
   peakQueueDepth,

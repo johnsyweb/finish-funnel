@@ -17,9 +17,9 @@ import {
   type ChartTimeRange,
 } from "./chartMomentMapping";
 import {
-  clampProposedFunnelToSiteConstraints,
-  proposedFunnelMatchesRecommendation,
-} from "./clampProposedFunnel";
+  clampLayoutToSiteConstraints,
+  layoutMatchesModelRecommendation,
+} from "./clampLayout";
 import {
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISHER_SPACING_METRES,
@@ -43,7 +43,7 @@ import { firstMomentAtPeakQueueDepth } from "./eventResultsAtMoment";
 import { resolveCallout } from "./resolveCallout";
 import type { BatchMarkerMoment } from "./batchMarkerMoments";
 import type { EventFinisherInput } from "./analyzeFinishFunnel";
-import type { RecommendedFunnelLayout } from "./recommendFunnelLayout";
+import type { ModelRecommendation } from "./recommendFunnelLayout";
 import type { FinishTokensSettings } from "./types";
 
 type EventFixture = {
@@ -90,12 +90,13 @@ const decelerationZoneInput =
   document.querySelector<HTMLInputElement>("#deceleration-zone")!;
 const finisherSpacingInput =
   document.querySelector<HTMLInputElement>("#finisher-spacing")!;
-const proposedLaneCountInput = document.querySelector<HTMLInputElement>(
-  "#proposed-lane-count",
+const layoutLaneCountInput =
+  document.querySelector<HTMLInputElement>("#layout-lane-count")!;
+const layoutLaneLengthInput = document.querySelector<HTMLInputElement>(
+  "#layout-lane-length",
 )!;
-const proposedLaneLengthInput = document.querySelector<HTMLInputElement>(
-  "#proposed-lane-length",
-)!;
+const resetToModelRecommendationButton =
+  document.querySelector<HTMLButtonElement>("#reset-to-model-recommendation")!;
 const callout = document.querySelector<HTMLDivElement>("#callout")!;
 const metrics = document.querySelector<HTMLDivElement>("#metrics")!;
 const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
@@ -157,39 +158,36 @@ function readSiteConstraints() {
   };
 }
 
-function readProposedFunnelRaw() {
+function readLayoutRaw() {
   return {
-    laneCount: readNumberInput(proposedLaneCountInput, 1),
-    laneLengthMetres: readNumberInput(proposedLaneLengthInput, 30),
+    laneCount: readNumberInput(layoutLaneCountInput, 1),
+    laneLengthMetres: readNumberInput(layoutLaneLengthInput, 30),
   };
 }
 
-function readProposedFunnel() {
-  return clampProposedFunnelToSiteConstraints({
-    ...readProposedFunnelRaw(),
+function readLayout() {
+  return clampLayoutToSiteConstraints({
+    ...readLayoutRaw(),
     ...readSiteConstraints(),
   });
 }
 
-function writeProposedFunnel(proposed: {
-  laneCount: number;
-  laneLengthMetres: number;
-}): void {
-  proposedLaneCountInput.value = String(proposed.laneCount);
-  proposedLaneLengthInput.value = String(proposed.laneLengthMetres);
+function writeLayout(layout: { laneCount: number; laneLengthMetres: number }) {
+  layoutLaneCountInput.value = String(layout.laneCount);
+  layoutLaneLengthInput.value = String(layout.laneLengthMetres);
 }
 
 function readFinisherSpacingMetres(): number {
   return finisherSpacingMetresFromInput({
     rawValue: finisherSpacingInput.value,
     fallback: DEFAULT_FINISHER_SPACING_METRES,
-    laneLengthMetres: readProposedFunnel().laneLengthMetres,
+    laneLengthMetres: readLayout().laneLengthMetres,
     decelerationZoneMetres: readDecelerationZoneMetres(),
   });
 }
 
 function syncFinisherSpacingInput(): void {
-  const { laneLengthMetres } = readProposedFunnel();
+  const { laneLengthMetres } = readLayout();
   const decelerationZoneMetres = readDecelerationZoneMetres();
   const maximum = maximumFinisherSpacingMetres({
     laneLengthMetres,
@@ -218,12 +216,12 @@ function applySiteConstraintDefaults(fixtureId: string): void {
   maximumLaneLengthInput.value = String(defaults.maximumLaneLengthMetres);
 }
 
-function applyRecommendedToProposed(
-  recommendation: RecommendedFunnelLayout,
+function applyModelRecommendationToLayout(
+  modelRecommendation: ModelRecommendation,
 ): void {
-  writeProposedFunnel({
-    laneCount: recommendation.laneCount,
-    laneLengthMetres: recommendation.laneLengthMetres,
+  writeLayout({
+    laneCount: modelRecommendation.laneCount,
+    laneLengthMetres: modelRecommendation.laneLengthMetres,
   });
 }
 
@@ -306,11 +304,11 @@ function render(resetSelectedMoment = false): void {
       decelerationZoneMetres,
       finisherSpacingMetres: readFinisherSpacingMetres(),
       ...siteConstraints,
-      ...readProposedFunnelRaw(),
+      ...readLayoutRaw(),
     });
 
     if (preview.recommendedFunnelLayout !== undefined) {
-      applyRecommendedToProposed(preview.recommendedFunnelLayout);
+      applyModelRecommendationToLayout(preview.recommendedFunnelLayout);
     }
 
     layoutStateKey = nextLayoutStateKey;
@@ -318,8 +316,8 @@ function render(resetSelectedMoment = false): void {
 
   syncFinisherSpacingInput();
 
-  const proposedFunnel = readProposedFunnel();
-  writeProposedFunnel(proposedFunnel);
+  const layout = readLayout();
+  writeLayout(layout);
 
   const finisherSpacingMetres = readFinisherSpacingMetres();
 
@@ -329,8 +327,8 @@ function render(resetSelectedMoment = false): void {
     decelerationZoneMetres,
     finisherSpacingMetres,
     ...siteConstraints,
-    laneCount: proposedFunnel.laneCount,
-    laneLengthMetres: proposedFunnel.laneLengthMetres,
+    laneCount: layout.laneCount,
+    laneLengthMetres: layout.laneLengthMetres,
   });
 
   chartTimeRange = timeRangeFromChartPoints(result.queueDepthOverTime);
@@ -349,16 +347,16 @@ function render(resetSelectedMoment = false): void {
     chartTimeRange,
   );
 
-  const recommendedFunnelLayout = result.recommendedFunnelLayout ?? {
-    laneCount: proposedFunnel.laneCount,
-    laneLengthMetres: proposedFunnel.laneLengthMetres,
+  const modelRecommendation = result.recommendedFunnelLayout ?? {
+    laneCount: layout.laneCount,
+    laneLengthMetres: layout.laneLengthMetres,
     sufficient: true,
     combinedLaneCapacity: 0,
     headroomFinishers: 0,
     shortfallFinishers: 0,
   };
 
-  const proposedMultiLaneLayout = result.proposedMultiLaneLayout ?? {
+  const layoutCheck = result.proposedMultiLaneLayout ?? {
     sufficient: true,
     combinedLaneCapacity: 0,
     headroomFinishers: 0,
@@ -366,14 +364,16 @@ function render(resetSelectedMoment = false): void {
     minimumLanesRequired: 0,
   };
 
-  const proposedMatchesRecommendation = proposedFunnelMatchesRecommendation(
-    proposedFunnel,
-    recommendedFunnelLayout,
+  const layoutMatchesModel = layoutMatchesModelRecommendation(
+    layout,
+    modelRecommendation,
   );
+
+  resetToModelRecommendationButton.hidden = layoutMatchesModel;
 
   const calloutState = resolveCallout({
     funnelNotRequired: result.funnelNotRequired,
-    combinedLaneCapacity: proposedMultiLaneLayout.combinedLaneCapacity,
+    combinedLaneCapacity: layoutCheck.combinedLaneCapacity,
     peakQueueDepth: result.peakQueueDepth,
     finishLineBackupModelled: result.finishLineBackupModelled,
   });
@@ -388,38 +388,45 @@ function render(resetSelectedMoment = false): void {
 
   metrics.innerHTML = buildMetricsMarkup({
     peakQueueDepth: result.peakQueueDepth,
-    recommendedFunnelLayout,
-    proposedMultiLaneLayout,
-    proposedMatchesRecommendation,
+    layout: {
+      laneCount: layout.laneCount,
+      laneLengthMetres: layout.laneLengthMetres,
+      sufficient: layoutCheck.sufficient,
+      combinedLaneCapacity: layoutCheck.combinedLaneCapacity,
+      headroomFinishers: layoutCheck.headroomFinishers,
+      shortfallFinishers: layoutCheck.shortfallFinishers,
+    },
+    modelRecommendation,
+    layoutMatchesModelRecommendation: layoutMatchesModel,
     finishLineBackupDelays: result.finishLineBackupDelays,
     tokenSupplyGaps: result.tokenSupplyGaps,
   });
 
   chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
 
-  const proposedQueueCapacity = proposedMatchesRecommendation
+  const modelRecommendationQueueCapacity = layoutMatchesModel
     ? undefined
-    : proposedMultiLaneLayout.combinedLaneCapacity;
+    : modelRecommendation.combinedLaneCapacity;
 
   drawQueueDepthChart(chartCanvas, result.queueDepthOverTime, {
     peakQueueDepth: result.peakQueueDepth,
-    recommendedQueueCapacity: recommendedFunnelLayout.combinedLaneCapacity,
-    proposedQueueCapacity,
+    layoutQueueCapacity: layoutCheck.combinedLaneCapacity,
+    modelRecommendationQueueCapacity,
     selectedMomentSeconds,
     batchMarkerMoments,
   });
 
   chartLegendMount.innerHTML = buildQueueChartLegendMarkup(
     queueChartLegendItems({
-      recommendedQueueCapacity: recommendedFunnelLayout.combinedLaneCapacity,
-      proposedQueueCapacity,
+      layoutQueueCapacity: layoutCheck.combinedLaneCapacity,
+      modelRecommendationQueueCapacity,
       batchMarkerMomentCount: batchMarkerMoments.length,
     }),
   );
 
   renderQueueVisualisation(fixture, finishTokensSettings, {
-    laneCount: proposedFunnel.laneCount,
-    laneLengthMetres: proposedFunnel.laneLengthMetres,
+    laneCount: layout.laneCount,
+    laneLengthMetres: layout.laneLengthMetres,
     decelerationZoneMetres,
     finisherSpacingMetres,
   });
@@ -438,9 +445,26 @@ for (const element of [
   element.addEventListener("input", () => render(true));
 }
 
-for (const element of [proposedLaneCountInput, proposedLaneLengthInput]) {
+for (const element of [layoutLaneCountInput, layoutLaneLengthInput]) {
   element.addEventListener("input", () => render());
 }
+
+resetToModelRecommendationButton.addEventListener("click", () => {
+  const preview = analyzeFinishFunnel({
+    finishers: selectedFixture().finishers,
+    finishTokensSettings: readFinishTokensSettings(),
+    decelerationZoneMetres: readDecelerationZoneMetres(),
+    finisherSpacingMetres: readFinisherSpacingMetres(),
+    ...readSiteConstraints(),
+    ...readLayoutRaw(),
+  });
+
+  if (preview.recommendedFunnelLayout !== undefined) {
+    applyModelRecommendationToLayout(preview.recommendedFunnelLayout);
+  }
+
+  render();
+});
 
 eventSelect.addEventListener("change", () => {
   applySiteConstraintDefaults(eventSelect.value);
