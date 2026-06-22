@@ -32,6 +32,10 @@ import {
 import { fixtureLayoutDefaults } from "./fixtureLayoutDefaults";
 import { fixtureTokenDefaults } from "./fixtureTokenDefaults";
 import { drawQueueDepthChart } from "./drawQueueDepthChart";
+import {
+  buildQueueChartLegendMarkup,
+  queueChartLegendItems,
+} from "./buildQueueChartLegendMarkup";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import { orderFixturesForDisplay } from "./orderFixturesForDisplay";
 import { eventResultsAtMoment } from "./eventResultsAtMoment";
@@ -99,6 +103,9 @@ const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
 )!;
 const chartCanvas = document.querySelector<HTMLCanvasElement>("#queue-chart")!;
 const chartWrap = document.querySelector<HTMLElement>("#chart-wrap")!;
+const chartLegendMount = document.querySelector<HTMLDivElement>(
+  "#queue-chart-legend-mount",
+)!;
 const queueMomentHeadingElement = document.querySelector<HTMLHeadingElement>(
   "#queue-moment-heading",
 )!;
@@ -401,6 +408,14 @@ function render(resetSelectedMoment = false): void {
     selectedMomentSeconds,
     batchMarkerMoments,
   });
+
+  chartLegendMount.innerHTML = buildQueueChartLegendMarkup(
+    queueChartLegendItems({
+      recommendedQueueCapacity: recommendedFunnelLayout.combinedLaneCapacity,
+      proposedQueueCapacity,
+      batchMarkerMomentCount: batchMarkerMoments.length,
+    }),
+  );
 
   renderQueueVisualisation(fixture, finishTokensSettings, {
     laneCount: proposedFunnel.laneCount,

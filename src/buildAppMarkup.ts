@@ -99,9 +99,11 @@ export function buildAppMarkup(): string {
         id="queue-chart"
         tabindex="0"
         role="img"
+        aria-describedby="queue-chart-legend"
         aria-label="Queue depth over finish time. Click or drag to choose a moment; use arrow keys when focused; use Page Up and Page Down to jump between batch marker moments."
       ></canvas>
     </div>
+    <div id="queue-chart-legend-mount" class="chart-legend-mount"></div>
   </section>
 
   <section class="panel" id="queue-visualisation-panel">

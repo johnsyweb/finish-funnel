@@ -36,6 +36,8 @@ describe("buildAppMarkup", () => {
     const markup = buildAppMarkup();
 
     expect(markup).toContain('id="chart-selected-moment"');
+    expect(markup).toContain('id="queue-chart-legend-mount"');
+    expect(markup).toContain('aria-describedby="queue-chart-legend"');
     expect(markup).toContain('tabindex="0"');
     expect(markup).toContain("arrow keys");
     expect(markup).toContain("Page Up");

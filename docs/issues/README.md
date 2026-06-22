@@ -19,5 +19,6 @@ Tracer-bullet vertical slices for queue visualisation. No GitHub remote yet — 
 | 13  | [Finish Tokens rotation and token supply batches](./13-finish-tokens-rotation.md)                 | 12         |
 | 14  | [Event results table at selected moment](./14-event-results-table-at-moment.md)                   | 13         |
 | 15  | [Site constraints and recommended funnel layout](./15-site-constraints-and-recommended-layout.md) | 14         |
+| 16  | [Queue depth chart legend](./16-queue-depth-chart-legend.md)                                      | 15         |
 
-After 15: userscript port, deploy (see `HANDOFF.md`).
+After 16: userscript port, deploy (see `HANDOFF.md`).

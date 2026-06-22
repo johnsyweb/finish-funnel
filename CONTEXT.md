@@ -149,8 +149,16 @@ The length in metres at the finish-line end of each finish funnel lane, where fa
 _Avoid_: Run-off area, slowing distance
 
 **Queue depth**:
-The number of finishers waiting in the finish funnel for a finish token at a given moment during the event. The peak queue depth determines the recommended queue capacity. Charted against clock finish time on the x-axis.
+The number of finishers waiting in the finish funnel for a finish token at a given moment during the event. The peak queue depth determines the recommended queue capacity. Charted against clock finish time on the x-axis as an orange line on the **queue depth chart**.
 _Avoid_: Backlog (ambiguous with processing delays), queue length (ambiguous with physical length)
+
+**Queue depth chart**:
+The queue depth over finish time plot. Shows queue depth through the event, horizontal reference lines for peak queue capacity and combined lane capacity, batch marker moments on multi-lane layouts, and the selected-moment indicator. A **chart legend** below the plot lists only the elements currently visible.
+_Avoid_: Timeline, finish chart (too vague)
+
+**Chart legend**:
+The key below the queue depth chart naming each visual element currently shown on the plot, with a swatch matching the chart line style and colour — solid or dashed horizontal strokes for series and reference lines, a vertical stroke for batch marker moments. Labels: **Queue depth**, **Peak queue capacity**, **Recommended capacity**, **Proposed capacity** (when shown), **Batch marker moment** (multi-lane only). Lists only visible elements. Does not include the selected-moment indicator (shown separately above the chart).
+_Avoid_: Key (too generic), chart labels (ambiguous with axis labels)
 
 **Selected moment**:
 The clock finish time chosen on the queue depth chart. Queue membership and per-finisher wait metrics are evaluated at this instant. Set by clicking or dragging on the chart; nudged with arrow keys when the chart has focus; jumped to the previous or next batch marker moment with Page Up or Page Down when the chart has focus. Shown as a vertical indicator and readable clock time on the chart. Defaults to the first moment peak queue depth is reached; resets to that moment whenever simulation settings change. Changing proposed funnel lane layout does not reset the selected moment.
