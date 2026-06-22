@@ -1,7 +1,4 @@
-import {
-  batchMarkerCardsNeededFromAssignments,
-  type FinisherLaneAssignment,
-} from "./assignFinisherLanes";
+import type { FinisherLaneAssignment } from "./assignFinisherLanes";
 import { laneQueueZoneMetres } from "./finisherSpacingLimits";
 import { physicalBatchSortIndex } from "./physicalBatchLabel";
 import { laneQueueCapacity } from "./multiLaneFunnel";
@@ -23,7 +20,6 @@ export type QueueMomentLaneSummary = {
 
 export type QueueMomentSummary = {
   queueDepth: number;
-  batchMarkerCardsNeeded?: number;
   finishLineBlockedCount?: number;
   lanes: QueueMomentLaneSummary[];
 };
@@ -130,10 +126,6 @@ export function queueMomentSummaryFromAssignments({
 
   return {
     queueDepth: queuedPositions.length,
-    batchMarkerCardsNeeded: batchMarkerCardsNeededFromAssignments(
-      laneAssignments,
-      laneCount,
-    ),
     finishLineBlockedCount:
       finishLineBlockedCount === undefined || finishLineBlockedCount === 0
         ? undefined

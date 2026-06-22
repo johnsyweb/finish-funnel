@@ -20,5 +20,6 @@ Tracer-bullet vertical slices for queue visualisation. No GitHub remote yet — 
 | 14  | [Event results table at selected moment](./14-event-results-table-at-moment.md)                   | 13         |
 | 15  | [Site constraints and recommended funnel layout](./15-site-constraints-and-recommended-layout.md) | 14         |
 | 16  | [Queue depth chart legend](./16-queue-depth-chart-legend.md)                                      | 15         |
+| 17  | [Layout setup information (On the day)](./17-layout-setup-information.md)                         | 16         |
 
-After 16: userscript port, deploy (see `HANDOFF.md`).
+After 17: userscript port, deploy (see `HANDOFF.md`).

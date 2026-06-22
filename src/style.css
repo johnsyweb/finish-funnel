@@ -121,6 +121,28 @@ select {
   color: var(--text);
 }
 
+.layout-setup-stakes {
+  margin: 0 0 0.25rem;
+}
+
+.layout-setup-stakes strong {
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+
+.layout-setup-context {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+}
+
+.layout-setup-batch-cards {
+  margin: 0;
+}
+
+.layout-setup-batch-cards strong {
+  color: var(--text);
+}
+
 .callout {
   border-left: 4px solid var(--ok);
   padding: 0.75rem 1rem;

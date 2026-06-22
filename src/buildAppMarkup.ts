@@ -1,4 +1,5 @@
 import {
+  DEFAULT_CORDON_STAKE_SPACING_METRES,
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISH_TOKENS_SETTINGS,
   DEFAULT_FINISHER_SPACING_METRES,
@@ -72,6 +73,10 @@ export function buildAppMarkup(): string {
           <label for="finisher-spacing">Finisher spacing (m)</label>
           <input id="finisher-spacing" type="number" min="0.25" step="0.05" value="${DEFAULT_FINISHER_SPACING_METRES}" />
         </div>
+        <div class="field">
+          <label for="cordon-stake-spacing">Cordon stake spacing (m)</label>
+          <input id="cordon-stake-spacing" type="number" min="1" step="1" value="${DEFAULT_CORDON_STAKE_SPACING_METRES}" />
+        </div>
       </fieldset>
       <fieldset>
         <legend>Layout</legend>
@@ -93,6 +98,11 @@ export function buildAppMarkup(): string {
   <div id="callout" role="status" aria-live="polite" hidden></div>
 
   <section class="panel metrics" id="metrics" aria-live="polite" aria-atomic="true"></section>
+
+  <section class="panel" id="layout-setup-panel" aria-live="polite">
+    <h2>On the day</h2>
+    <div id="layout-setup-mount"></div>
+  </section>
 
   <section class="panel">
     <h2>Queue depth over finish time</h2>

@@ -58,10 +58,23 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain('id="maximum-lane-length"');
     expect(markup).toContain('id="layout-lane-count"');
     expect(markup).toContain('id="layout-lane-length"');
+    expect(markup).toContain('id="cordon-stake-spacing"');
     expect(markup).toContain('id="reset-to-model-recommendation"');
     expect(markup).toContain("Site constraints");
     expect(markup).toContain("Layout assumptions");
     expect(markup).toContain("Layout");
     expect(markup).not.toContain("Proposed funnel");
+  });
+
+  it("includes the on-the-day layout setup panel between metrics and the chart", () => {
+    const markup = buildAppMarkup();
+    const metricsIndex = markup.indexOf('id="metrics"');
+    const setupIndex = markup.indexOf('id="layout-setup-panel"');
+    const chartIndex = markup.indexOf("Queue depth over finish time");
+
+    expect(setupIndex).toBeGreaterThan(metricsIndex);
+    expect(chartIndex).toBeGreaterThan(setupIndex);
+    expect(markup).toContain("On the day");
+    expect(markup).toContain('id="layout-setup-mount"');
   });
 });

@@ -9,7 +9,6 @@ import type { QueueMomentSummary } from "../queueMomentSummary";
 
 const multiLaneSummary: QueueMomentSummary = {
   queueDepth: 719,
-  batchMarkerCardsNeeded: 8,
   finishLineBlockedCount: 256,
   lanes: [
     {
@@ -44,22 +43,6 @@ describe("queueMomentHeading", () => {
 });
 
 describe("buildQueueMomentSummaryMarkup", () => {
-  it("shows batch marker cards needed for the event on multi-lane layouts", () => {
-    const markup = buildQueueMomentSummaryMarkup(multiLaneSummary);
-
-    expect(markup).toContain("Batch marker cards needed for event: 8");
-    expect(markup).toContain('class="queue-batch-cards-needed"');
-  });
-
-  it("uses singular copy when only one batch marker card is needed", () => {
-    const markup = buildQueueMomentSummaryMarkup({
-      ...multiLaneSummary,
-      batchMarkerCardsNeeded: 1,
-    });
-
-    expect(markup).toContain("Batch marker card needed for event: 1");
-  });
-
   it("renders a definition list with lane utilisation and batches", () => {
     const markup = buildQueueMomentSummaryMarkup(multiLaneSummary);
     const document = new DOMParser().parseFromString(markup, "text/html");

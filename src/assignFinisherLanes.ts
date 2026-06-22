@@ -175,16 +175,3 @@ function lowestLaneWithCapacity(
 
   return undefined;
 }
-
-export function batchMarkerCardsNeededFromAssignments(
-  laneAssignments: FinisherLaneAssignment[],
-  laneCount: number,
-): number | undefined {
-  if (laneCount <= 1) {
-    return undefined;
-  }
-
-  return laneAssignments.filter(
-    (assignment) => assignment.batchMarker !== undefined,
-  ).length;
-}

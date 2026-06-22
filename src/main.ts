@@ -2,6 +2,7 @@ import { analyzeFinishFunnel } from "./analyzeFinishFunnel";
 import { attachCanvasResizeHandler } from "./attachCanvasResizeHandler";
 import { attachChartMomentControls } from "./attachChartMomentControls";
 import { buildAppMarkup } from "./buildAppMarkup";
+import { buildLayoutSetupMarkup } from "./buildLayoutSetupMarkup";
 import { buildMetricsMarkup } from "./buildMetricsMarkup";
 import {
   buildEventResultsTableMarkup,
@@ -21,6 +22,7 @@ import {
   layoutMatchesModelRecommendation,
 } from "./clampLayout";
 import {
+  DEFAULT_CORDON_STAKE_SPACING_METRES,
   DEFAULT_DECELERATION_ZONE_METRES,
   DEFAULT_FINISHER_SPACING_METRES,
   DEFAULT_FIXTURE_ID,
@@ -90,6 +92,9 @@ const decelerationZoneInput =
   document.querySelector<HTMLInputElement>("#deceleration-zone")!;
 const finisherSpacingInput =
   document.querySelector<HTMLInputElement>("#finisher-spacing")!;
+const cordonStakeSpacingInput = document.querySelector<HTMLInputElement>(
+  "#cordon-stake-spacing",
+)!;
 const layoutLaneCountInput =
   document.querySelector<HTMLInputElement>("#layout-lane-count")!;
 const layoutLaneLengthInput = document.querySelector<HTMLInputElement>(
@@ -99,6 +104,9 @@ const resetToModelRecommendationButton =
   document.querySelector<HTMLButtonElement>("#reset-to-model-recommendation")!;
 const callout = document.querySelector<HTMLDivElement>("#callout")!;
 const metrics = document.querySelector<HTMLDivElement>("#metrics")!;
+const layoutSetupMount = document.querySelector<HTMLDivElement>(
+  "#layout-setup-mount",
+)!;
 const chartSelectedMoment = document.querySelector<HTMLParagraphElement>(
   "#chart-selected-moment",
 )!;
@@ -175,6 +183,16 @@ function readLayout() {
 function writeLayout(layout: { laneCount: number; laneLengthMetres: number }) {
   layoutLaneCountInput.value = String(layout.laneCount);
   layoutLaneLengthInput.value = String(layout.laneLengthMetres);
+}
+
+function readCordonStakeSpacingMetres(): number {
+  return Math.max(
+    1,
+    readNumberInput(
+      cordonStakeSpacingInput,
+      DEFAULT_CORDON_STAKE_SPACING_METRES,
+    ),
+  );
 }
 
 function readFinisherSpacingMetres(): number {
@@ -402,6 +420,16 @@ function render(resetSelectedMoment = false): void {
     tokenSupplyGaps: result.tokenSupplyGaps,
   });
 
+  const batchMarkerCardsNeeded =
+    layout.laneCount > 1 ? result.batchMarkerMoments.length : undefined;
+
+  layoutSetupMount.innerHTML = buildLayoutSetupMarkup({
+    laneCount: layout.laneCount,
+    laneLengthMetres: layout.laneLengthMetres,
+    cordonStakeSpacingMetres: readCordonStakeSpacingMetres(),
+    batchMarkerCardsNeeded,
+  });
+
   chartSelectedMoment.textContent = `Selected moment: ${formatFinishClockTime(selectedMomentSeconds)}`;
 
   const modelRecommendationQueueCapacity = layoutMatchesModel
@@ -444,6 +472,8 @@ for (const element of [
 ]) {
   element.addEventListener("input", () => render(true));
 }
+
+cordonStakeSpacingInput.addEventListener("input", () => render());
 
 for (const element of [layoutLaneCountInput, layoutLaneLengthInput]) {
   element.addEventListener("input", () => render());
