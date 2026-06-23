@@ -1,8 +1,28 @@
 # Finish Funnel
 
-A standalone web app for parkrun event teams to size a single-lane finish funnel so finish tokens can be handed out in order during busy finish periods. Loads event results from bundled fixtures in v1; later from a results-page userscript.
+A parkrun event-team tool to size a finish funnel so finish tokens can be handed out in order during busy finish periods. Delivered as a **userscript** on live parkrun results pages and as a **standalone development app** with bundled fixtures; both share the same simulation core.
 
 ## Language
+
+**Finish Funnel userscript**:
+The production delivery: a Tampermonkey-style userscript that runs on parkrun event results pages, reads **event results** from the page, injects a **Finish Funnel panel** above the results table, and augments the table with a **Finish funnel column** — without replacing parkrun’s published results. Activates only on event results URLs, only when a results table is present in the DOM, and only after the event team chooses **Analyse finish funnel**.
+_Avoid_: Extension (different packaging), bookmarklet (too limited for this UI)
+
+**Analyse finish funnel**:
+The on-page control injected near the Finishers heading when the URL is an event results page and a finishers results table is present. Activates the **Finish Funnel userscript** — injecting the **Finish Funnel panel** and **Finish funnel column**. After activation, the control toggles to hide Finish Funnel (removes panel and injected column until shown again). Does not run automatically on page load.
+_Avoid_: Run simulation (too generic), enable Finish Funnel (ambiguous with role)
+
+**Finish Funnel panel**:
+The simulation UI the **Finish Funnel userscript** injects above the parkrun results table: settings (in a collapsible section), metrics, **On the day**, queue depth chart, chart legend, selected moment, and **queue moment summary**. Sizing and moment selection happen here; per-finisher detail appears in the **Finish funnel column** when the event team scrolls the **augmented results table**. Does not duplicate parkrun’s results search — filtering and sorting use parkrun’s controls.
+_Avoid_: Overlay (too vague), sidebar (different placement)
+
+**Finish Funnel development app**:
+The standalone web app in this repository for developing and testing the simulation core against bundled fixtures. Same simulation behaviour as the **Finish Funnel userscript**; built from the same source with a separate entry point. Not the primary surface for event teams on the day.
+_Avoid_: Standalone app alone (omits userscript), prototype (understates its testing role)
+
+**Finish Funnel userscript build**:
+The userscript bundle produced from this repository (`src/userscript/` entry point) — packages the shared simulation core and DOM injection for Tampermonkey-style installation on parkrun results pages.
+_Avoid_: External package (v1 keeps build in-repo), bookmarklet
 
 **Finish funnel**:
 The roped-off single-lane queue between the finish line and the point where finish tokens are handed to finishers in position order. Not every event needs one — quiet events may hand out tokens without roping off a lane when peak queue depth stays low.
@@ -73,8 +93,12 @@ When peak queue depth is at most 2 (fixed threshold), the page shows a callout t
 _Avoid_: No funnel, skip funnel (too imperative)
 
 **Finish Tokens**:
-The parkrun volunteer role responsible for handing a numbered finish token to each finisher in position order at the end of the finish funnel.
-_Avoid_: Finish Token Support, token volunteer (too vague)
+The parkrun volunteer role responsible for handing a numbered finish token to each finisher in position order at the end of the finish funnel. On live results pages, count rows in the **volunteers roster** whose role is Finish Tokens to set **Finish Tokens settings** volunteer count. Distinct from **Finish Token Support**.
+_Avoid_: Token volunteer (too vague)
+
+**Finish Token Support**:
+The parkrun volunteer role that keeps finish tokens supplied to **Finish Tokens** volunteers — fetching batches so handover need not pause. Listed separately on the **volunteers roster**; not counted in the **Finish Tokens rotation** pool. When at least one Finish Token Support volunteer is on the roster for the event, **token supply fetch delay** is treated as zero for simulation on that page.
+_Avoid_: Finish Tokens (hand out tokens), token volunteer (too vague)
 
 **Token handover order**:
 Finish tokens are always handed out in strict finish position order (1, 2, 3, …), regardless of how many finish funnel lanes are in use. Multi-lane layouts do not create separate token batches.
@@ -85,7 +109,7 @@ A numbered set of finish tokens prepared for handover at the end of the finish f
 _Avoid_: Token batch (ambiguous with physical batch), batch of tokens (too vague)
 
 **Token supply fetch delay**:
-How long handover pauses when the active volunteer’s token supply batch is exhausted and no standby volunteer has the next batch ready — while someone fetches the next batch. Configurable in Finish Tokens settings; default 30 seconds. Pauses increase peak queue depth and feed into funnel sizing recommendations.
+How long handover pauses when the active volunteer’s token supply batch is exhausted and no standby volunteer in the **Finish Tokens rotation** pool has the next batch ready — while someone fetches the next batch. Configurable in Finish Tokens settings; default 30 seconds when no **Finish Token Support** is on the **volunteers roster**; zero when at least one Finish Token Support volunteer is listed. Pauses increase peak queue depth and feed into funnel sizing recommendations.
 _Avoid_: Batch change time, refill delay (too vague)
 
 **Token supply gap**:
@@ -113,8 +137,16 @@ A finisher whose published result time is missing or unparseable. Assigned the p
 _Avoid_: Unknown time (describes the data, not the person), missing time
 
 **Site constraints**:
-The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **model recommendation**. Fixture selection sets sensible defaults per course and resets both values when the fixture changes. Changing site constraints, simulation settings, or fixture recomputes the model recommendation and re-syncs the **layout** to match (discarding any manual tweak).
+The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **model recommendation**. On live results pages the **Finish Funnel userscript** restores **site constraints** from **persisted event settings** keyed by event path. In the **Finish Funnel development app**, fixture selection sets sensible defaults per course and resets both values when the fixture changes. Changing site constraints or simulation settings recomputes the model recommendation and re-syncs the **layout** to match (discarding any manual tweak).
 _Avoid_: Course limits (too vague), venue settings
+
+**Persisted event settings**:
+Per-event browser storage for the **Finish Funnel userscript**, keyed by parkrun event path (e.g. `/mernda/`). Persists **site constraints**, **layout assumptions**, and **Finish Tokens settings** except volunteer count (read from the **volunteers roster** on each results page). Does not persist **layout** — that is recomputed from each event’s results. Restored on later visits to the same event.
+_Avoid_: Saved settings (too generic), course profile (ambiguous with parkrun profile)
+
+**Volunteers roster**:
+The volunteers table on a parkrun event results page: volunteer name, role, and club. The **Finish Funnel userscript** reads **Finish Tokens** and **Finish Token Support** role counts from this table to pre-fill simulation inputs for that event.
+_Avoid_: Volunteer list (too generic), roster (ambiguous with Finish Tokens rotation pool)
 
 **Maximum lane length**:
 The longest total roped length per finish funnel lane the course can accommodate with stakes and cordons — from the finish line to the token handover point, **including** the deceleration zone at the finish-line end. A hard site constraint; the model's recommended per-lane length must not exceed this value. Fixture selection sets a sensible default per course (e.g. Bushy: 300 m; Albert Melbourne: 200 m; Mernda: 30 m).
@@ -133,12 +165,24 @@ The finish funnel layout the event team configures for simulation and queue visu
 _Avoid_: Proposed funnel, configured layout (too vague), current setup
 
 **Event results**:
-The finish position, name, and published finish time for each finisher from a parkrun event results page. Loaded from a bundled fixture in v1; later from a results-page userscript. Parsed and Unknown-handled in finish-funnel first; proven logic ported to tampermonkey-parkrun when the userscript ships.
+The finish position, name, and published finish time for each finisher from a parkrun event results page. On live pages the userscript reads the existing results table; the standalone development app loads bundled fixtures. Parsed and Unknown-handled in finish-funnel first; proven logic shared with the userscript.
 _Avoid_: Results data, finish data (too vague)
 
 **Results row**:
-One finisher’s published entry from the event results table: finish position, name, and finish time. Stored in event results fixtures and shown in the queue visualisation alongside wait metrics.
+One finisher’s published entry from the parkrun results table: finish position, name, and finish time, plus parkrun’s own columns (gender, age group, club, and so on). The **Finish Funnel userscript** augments each row with simulation fields; the **Finish Funnel development app** shows the same fields in a reconstructed table for testing.
 _Avoid_: Result line, table row (too generic without “results”)
+
+**Augmented results table**:
+The parkrun event results table on a live results page after the **Finish Funnel userscript** injects one **Finish funnel column** into the existing `<table>`. Parkrun’s published columns and rows are preserved; Finish Funnel cells use parkrun’s **compact** and **detailed** display pattern so simulation detail appears when the event team switches View Settings to Detailed. Simulation runs on the full **event results** once; when parkrun search, sort, or view toggles change the table body, the userscript re-augments visible rows by finish position — no separate search in the **Finish Funnel panel**.
+_Avoid_: Reconstructed results table (development app only), enhanced table (too vague)
+
+**Finish funnel column**:
+The single simulation column the **Finish Funnel userscript** adds to the **augmented results table**, placed after **Time** (rightmost). In **compact** **results display mode**: status only (**In queue**, **At finish line**, or blank). In **detailed** mode: lane, physical batch, queue position, time waiting, time until token, total estimated queueing time, and Finish Tokens volunteer — populated according to each finisher’s state at the **selected moment**; blank where not applicable.
+_Avoid_: Simulation columns (plural — one column only on live pages), extra columns
+
+**Results display mode**:
+How parkrun shows each results table: **compact** (minimal columns and cell content) or **detailed** (extra lines within cells). Finish Funnel simulation fields follow the same pattern — brief status in compact, full lane/batch/wait metrics in detailed.
+_Avoid_: View mode (too generic), table density
 
 **Finisher spacing**:
 The assumed along-lane distance in metres each finisher occupies in a single-file finish funnel lane. Configurable; default 0.75 m. Used to derive the queue portion of physical funnel length from queue capacity. Lane width is not modelled separately — finish funnel lanes are single-file with no overtaking.
@@ -177,35 +221,35 @@ The clock finish time chosen on the queue depth chart. Queue membership and per-
 _Avoid_: Scrub time, cursor time, selected time (ambiguous with published finish time)
 
 **Queued finisher**:
-At the selected moment, a finisher who has already had a finisher arrival but has not yet received a finish token. Ordered front to back by arrival time; the front finisher is next to receive a token. In the event results table at selected moment, status shows **In queue**; queue position and wait metrics are populated.
+At the selected moment, a finisher who has already had a finisher arrival but has not yet received a finish token. Ordered front to back by arrival time; the front finisher is next to receive a token. In the **Finish funnel column**, status shows **In queue**; queue position and wait metrics are populated.
 _Avoid_: Waiting runner, person in queue (too informal)
 
 **Queue visualisation**:
-The UI shown at the selected moment: a **queue moment summary** plus a complete **event results table at selected moment** — one row per finisher in the event results, in finish position order like the parkrun results page, with optional search by name or finish position. Simulation columns (lane, batch, queue metrics, Finish Tokens volunteer) are populated according to each finisher’s state at the selected moment; blank where not applicable. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
+The UI shown at the **selected moment**. On live results pages: **queue moment summary** plus the **augmented results table**. In the **Finish Funnel development app**: the same summary plus a mock parkrun results table with a **Finish funnel column** — same compact/detailed markup as the **Finish Funnel userscript**, not a separate wide grid. Simulation fields on each **results row** reflect that finisher’s state at the selected moment; blank where not applicable. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
 _Avoid_: Queue view, funnel map (ambiguous with capacity sizing)
 
 **Event results table at selected moment**:
-The complete results table in the queue visualisation: every **results row** for the loaded event, ordered by finish position. Columns: finish position, name, published finish time, status, lane, batch, queue position, time waiting, time until token, total estimated queueing time, Finish Tokens volunteer. At the selected moment each row is in one of four states — **not yet finished**, **finish-line blocked**, **queued**, or **tokened** — with simulation columns filled or left blank accordingly. A **Status** column shows **At finish line** or **In queue** where applicable; blank for not-yet-finished and tokened rows. Optional search by name or finish position filters visible rows; empty search shows every finisher with no pagination. The table scrolls vertically with a sticky header. Replaces the former paginated queued-only table.
-_Avoid_: Full results table (too generic), queue table (ambiguous with queued-only)
+Retired term — use **augmented results table** on live pages and the same single-column layout in the **Finish Funnel development app**. Do not maintain a separate multi-column reconstructed table.
+_Avoid_: Full results table (too generic), queue table (ambiguous with queued-only), augmented results table (live pages)
 
 **Queue moment summary**:
 The breakdown shown above the queue table at the selected moment. The section heading carries total queue depth at the selected moment (e.g. “Queue at selected moment (719)”). Every configured finish funnel lane is listed. Per lane, queued finishers and queue-zone utilisation as occupied / maximum finishers and occupied / maximum metres (queue zone = lane length minus deceleration; occupied metres = queued in lane × finisher spacing, shown to one decimal place). Under each lane, every physical batch that still has at least one queued finisher in that lane at the selected moment, with count, listed in switch order — typically two or three batches per lane at peak (e.g. lane 1: unnamed 12, B 381; lane 2: B 180, C 95, D 51). When finish-line backup is modelled and finishers are blocked at the finish line at the selected moment, an additional line states how many have not yet entered the funnel. Replaces the single-line queue depth paragraph. For a single finish funnel lane, show the lane utilisation line only — no physical batch nesting. Event-wide batch marker card count lives in **layout setup information**, not here.
 _Avoid_: Lane status panel, funnel snapshot
 
 **Finish-line blocked finisher**:
-At the selected moment, a finisher who has passed the finish line by published (or estimated) finish time but has not yet had a finisher arrival into the funnel because finish-line backup delayed admission. Not counted in queue depth or lane occupancy until they enter. In the event results table at selected moment, lane, batch, queue metrics, and Finish Tokens volunteer are blank; status shows **At finish line**.
+At the selected moment, a finisher who has passed the finish line by published (or estimated) finish time but has not yet had a finisher arrival into the funnel because finish-line backup delayed admission. Not counted in queue depth or lane occupancy until they enter. In the **Finish funnel column**, lane, batch, queue metrics, and Finish Tokens volunteer are blank; status shows **At finish line**.
 _Avoid_: Waiting to enter, pre-funnel finisher
 
 **Tokened finisher**:
-At the selected moment, a finisher who has already received a finish token. In the event results table at selected moment, lane and physical batch are shown from finisher lane assignment; queue position and time until token are blank; time waiting and total estimated queueing time show actual durations; Finish Tokens volunteer shows which volunteer in the rotation pool handed the token (labelled **Finish Tokens 1**, **Finish Tokens 2**, …).
+At the selected moment, a finisher who has already received a finish token. In the **Finish funnel column**, lane and physical batch are shown from finisher lane assignment; queue position and time until token are blank; time waiting and total estimated queueing time show actual durations; Finish Tokens volunteer shows which volunteer in the rotation pool handed the token (labelled **Finish Tokens 1**, **Finish Tokens 2**, …).
 _Avoid_: Served finisher, completed finisher
 
 **Finish Tokens volunteer label**:
-How a volunteer in the Finish Tokens rotation pool is named in the event results table when they handed a token: **Finish Tokens 1**, **Finish Tokens 2**, … in pool order. Blank when no token has been handed yet for that finisher at the selected moment.
+How a volunteer in the Finish Tokens rotation pool is named in the **Finish funnel column** when they handed a token: **Finish Tokens 1**, **Finish Tokens 2**, … in pool order. Blank when no token has been handed yet for that finisher at the selected moment.
 _Avoid_: Volunteer 1 (ambiguous with other roles), FT1 (too cryptic)
 
 **Not-yet-finished finisher**:
-At the selected moment, a finisher whose published (or estimated) finish time is still in the future — they have not yet crossed the finish line. In the event results table at selected moment, simulation columns (status excepted, lane, batch, queue metrics, Finish Tokens volunteer) are blank.
+At the selected moment, a finisher whose published (or estimated) finish time is still in the future — they have not yet crossed the finish line. In the **Finish funnel column**, status and detailed fields are blank.
 _Avoid_: Still running, on course (too informal)
 
 **Queue position**:
@@ -225,5 +269,5 @@ For a queued finisher at the selected moment, the full wait from finisher arriva
 _Avoid_: Total wait, queue duration (ambiguous with physical funnel length)
 
 **Finish Tokens settings**:
-The configurable token handover rate (tokens per minute for the active Finish Tokens volunteer), number of Finish Tokens volunteers in rotation, token supply batch size, and token supply fetch delay used in the simulation. Fixture selection sets sensible defaults for batch size (e.g. Mernda 100, Albert Melbourne 30, Bushy 30). Default handover rate: 15 tokens/min; default volunteers: 1; default fetch delay: 30 seconds.
+The configurable token handover rate (tokens per minute for the active Finish Tokens volunteer), number of Finish Tokens volunteers in rotation, token supply batch size, and token supply fetch delay used in the simulation. On live results pages, volunteer count comes from the **volunteers roster** (Finish Tokens rows only); other values restore from **persisted event settings** or defaults. In the **Finish Funnel development app**, fixture selection sets sensible defaults for batch size (e.g. Mernda 100, Albert Melbourne 30, Bushy 30). Default handover rate: 15 tokens/min; default volunteers: 1; default fetch delay: 30 seconds.
 _Avoid_: Service settings, handover settings

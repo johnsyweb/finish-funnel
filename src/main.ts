@@ -4,10 +4,7 @@ import { attachChartMomentControls } from "./attachChartMomentControls";
 import { buildAppMarkup } from "./buildAppMarkup";
 import { buildLayoutSetupMarkup } from "./buildLayoutSetupMarkup";
 import { buildMetricsMarkup } from "./buildMetricsMarkup";
-import {
-  buildEventResultsTableMarkup,
-  parseQueueSearchFilter,
-} from "./buildQueueVisualisationMarkup";
+import { buildAugmentedResultsTableFromEventResults } from "./buildQueueVisualisationMarkup";
 import {
   buildQueueMomentSummaryMarkup,
   queueMomentHeading,
@@ -122,10 +119,11 @@ const queueMomentHeadingElement = document.querySelector<HTMLHeadingElement>(
 const queueSummaryMount = document.querySelector<HTMLDivElement>(
   "#queue-summary-mount",
 )!;
-const queueSearchInput =
-  document.querySelector<HTMLInputElement>("#queue-search")!;
 const queueTableMount =
   document.querySelector<HTMLDivElement>("#queue-table-mount")!;
+const resultsDisplayModeInput = document.querySelector<HTMLInputElement>(
+  "#results-display-mode",
+)!;
 
 for (const fixture of fixtures) {
   const option = document.createElement("option");
@@ -274,6 +272,10 @@ function currentLayoutStateKey(fixtureId: string): string {
   });
 }
 
+function readResultsDisplayMode(): "compact" | "detailed" {
+  return resultsDisplayModeInput.checked ? "detailed" : "compact";
+}
+
 function renderQueueVisualisation(
   fixture: EventFixture,
   finishTokensSettings: FinishTokensSettings,
@@ -284,7 +286,6 @@ function renderQueueVisualisation(
     finisherSpacingMetres: number;
   },
 ): void {
-  const searchFilter = parseQueueSearchFilter(queueSearchInput.value);
   const queueResult = eventResultsAtMoment({
     finishers: fixture.finishers,
     finishTokensSettings,
@@ -293,7 +294,6 @@ function renderQueueVisualisation(
     laneLengthMetres: layout.laneLengthMetres,
     decelerationZoneMetres: layout.decelerationZoneMetres,
     finisherSpacingMetres: layout.finisherSpacingMetres,
-    ...searchFilter,
   });
 
   queueMomentHeadingElement.textContent = queueMomentHeading(
@@ -302,12 +302,9 @@ function renderQueueVisualisation(
   queueSummaryMount.innerHTML = buildQueueMomentSummaryMarkup(
     queueResult.queueMomentSummary,
   );
-  queueTableMount.innerHTML = buildEventResultsTableMarkup(
+  queueTableMount.innerHTML = buildAugmentedResultsTableFromEventResults(
     queueResult.finishers,
-    {
-      totalCount: queueResult.totalCount,
-      visibleCount: queueResult.visibleCount,
-    },
+    { displayMode: readResultsDisplayMode() },
   );
 }
 
@@ -510,7 +507,7 @@ eventSelect.addEventListener("change", () => {
   applyFixtureTokenDefaults(eventSelect.value);
   render(true);
 });
-queueSearchInput.addEventListener("input", () => render());
+resultsDisplayModeInput.addEventListener("change", () => render());
 
 attachCanvasResizeHandler(chartWrap, () => render());
 attachChartMomentControls({

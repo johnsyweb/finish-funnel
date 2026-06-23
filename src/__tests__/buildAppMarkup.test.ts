@@ -43,12 +43,12 @@ describe("buildAppMarkup", () => {
     expect(markup).toContain("Page Up");
   });
 
-  it("includes a searchable queue visualisation region", () => {
+  it("includes an augmented results visualisation region", () => {
     const markup = buildAppMarkup();
 
     expect(markup).toContain('id="queue-visualisation-panel"');
-    expect(markup).toContain('id="queue-search"');
-    expect(markup).toContain("Search by name or finish position");
+    expect(markup).toContain('id="results-display-mode"');
+    expect(markup).toContain("Detailed results display");
   });
 
   it("includes site constraints and layout inputs", () => {

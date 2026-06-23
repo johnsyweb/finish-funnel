@@ -40,7 +40,8 @@ aube run build:fixtures
 - Discrete token handover (default 15 tokens/min active volunteer); Finish Tokens volunteers rotate on token supply batch exhaustion; configurable batch size and fetch delay
 - **Site constraints** (maximum lane length, maximum lane count) drive **model recommendation**; **Layout** fieldset pre-filled for simulation and manual tweaks
 - **On the day** panel: cordon stake count (N + 1 shared cordon lines) and batch marker cards from layout
-- Multi-lane: lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured; queue moment summary and complete event results table at selected moment
+- Multi-lane: lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured; queue moment summary and augmented results table at selected moment
+- Userscript slice 1: parse results/volunteers DOM, **Finish funnel column**, **Analyse finish funnel** activation (see `src/userscript/`)
 - Chart capacity reference lines for layout; model recommendation when layout differs
 
 See `CONTEXT.md` for domain language.

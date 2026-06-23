@@ -123,8 +123,8 @@ export function buildAppMarkup(): string {
     <h2 id="queue-moment-heading">Queue at selected moment</h2>
     <div id="queue-summary-mount" aria-live="polite"></div>
     <div class="field">
-      <label for="queue-search">Search by name or finish position</label>
-      <input id="queue-search" type="search" autocomplete="off" />
+      <input id="results-display-mode" type="checkbox" />
+      <label for="results-display-mode">Detailed results display</label>
     </div>
     <div id="queue-table-mount"></div>
   </section>
