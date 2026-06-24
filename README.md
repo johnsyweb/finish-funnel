@@ -55,3 +55,12 @@ Bundled results fixtures in `public/fixtures/` support tests and can be regenera
 - Multi-lane layout, queue depth chart, batch markers, and per-finisher queue detail in the **Finish funnel column**
 
 See `CONTEXT.md` for domain language.
+
+## CI/CD
+
+GitHub Actions runs lint, typecheck, format check, tests, and build on every push and pull request to `main`. Merges to `main` also:
+
+- deploy the landing page (`dist/`) to GitHub Pages at `/finish-funnel/`
+- sync `finish-funnel.user.js` to the repository root for raw GitHub install URLs
+
+Enable **GitHub Pages** in the repository settings (source: GitHub Actions). Point `www.johnsy.com/finish-funnel/` at the Pages deployment when ready.
