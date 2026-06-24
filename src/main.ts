@@ -203,7 +203,13 @@ function readFinisherSpacingMetres(): number {
   });
 }
 
-function syncFinisherSpacingInput(force = false): void {
+function syncFinisherSpacingInput({
+  force = false,
+  preserveValue = false,
+}: {
+  force?: boolean;
+  preserveValue?: boolean;
+} = {}): void {
   const { laneLengthMetres } = readLayout();
   const decelerationZoneMetres = readDecelerationZoneMetres();
   const synced = syncFinisherSpacingInputValue({
@@ -215,8 +221,9 @@ function syncFinisherSpacingInput(force = false): void {
   finisherSpacingInput.max = synced.max;
 
   if (
-    force ||
-    shouldImmediatelySyncFinisherSpacing(finisherSpacingInput.value, synced)
+    !preserveValue &&
+    (force ||
+      shouldImmediatelySyncFinisherSpacing(finisherSpacingInput.value, synced))
   ) {
     finisherSpacingInput.value = synced.value;
   }
@@ -308,7 +315,10 @@ function renderQueueVisualisation(
   );
 }
 
-function render(resetSelectedMoment = false): void {
+function render(
+  resetSelectedMoment = false,
+  preserveLayoutAssumptions = false,
+): void {
   const fixture = selectedFixture();
   const finishTokensSettings = readFinishTokensSettings();
   const decelerationZoneMetres = readDecelerationZoneMetres();
@@ -333,7 +343,10 @@ function render(resetSelectedMoment = false): void {
     layoutStateKey = nextLayoutStateKey;
   }
 
-  syncFinisherSpacingInput(layoutChanged);
+  syncFinisherSpacingInput({
+    force: layoutChanged,
+    preserveValue: preserveLayoutAssumptions,
+  });
 
   const layout = readLayout();
   writeLayout(layout);
@@ -407,6 +420,7 @@ function render(resetSelectedMoment = false): void {
 
   metrics.innerHTML = buildMetricsMarkup({
     peakQueueDepth: result.peakQueueDepth,
+    eventQueueTimeSummary: result.eventQueueTimeSummary,
     layout: {
       laneCount: layout.laneCount,
       laneLengthMetres: layout.laneLengthMetres,
@@ -477,12 +491,12 @@ for (const element of [
 cordonStakeSpacingInput.addEventListener("input", () => render());
 
 finisherSpacingInput.addEventListener("blur", () => {
-  syncFinisherSpacingInput(true);
+  syncFinisherSpacingInput({ force: true });
   render();
 });
 
 for (const element of [layoutLaneCountInput, layoutLaneLengthInput]) {
-  element.addEventListener("input", () => render());
+  element.addEventListener("input", () => render(false, true));
 }
 
 resetToModelRecommendationButton.addEventListener("click", () => {
