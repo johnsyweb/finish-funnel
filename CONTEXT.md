@@ -1,6 +1,6 @@
 # Finish Funnel
 
-A parkrun event-team tool to size a finish funnel so finish tokens can be handed out in order during busy finish periods. Delivered as a **userscript** on live parkrun results pages and as a **standalone development app** with bundled fixtures; both share the same simulation core.
+A parkrun event-team tool to size a finish funnel so finish tokens can be handed out in order during busy finish periods. Delivered as a **userscript** on live parkrun results pages, with a **Finish Funnel landing page** at johnsy.com for installation and documentation.
 
 ## Language
 
@@ -16,12 +16,28 @@ _Avoid_: Run simulation (too generic), enable Finish Funnel (ambiguous with role
 The simulation UI the **Finish Funnel userscript** injects above the parkrun results table: settings (in a collapsible section), metrics, **On the day**, queue depth chart, chart legend, selected moment, and **queue moment summary**. Sizing and moment selection happen here; per-finisher detail appears in the **Finish funnel column** when the event team scrolls the **augmented results table**. Does not duplicate parkrun’s results search — filtering and sorting use parkrun’s controls.
 _Avoid_: Overlay (too vague), sidebar (different placement)
 
-**Finish Funnel development app**:
-The standalone web app in this repository for developing and testing the simulation core against bundled fixtures. Same simulation behaviour as the **Finish Funnel userscript**; built from the same source with a separate entry point. Not the primary surface for event teams on the day.
-_Avoid_: Standalone app alone (omits userscript), prototype (understates its testing role)
+**Why Finish Funnel exists**:
+parkrun publishes little practical guidance on how long or wide a finish funnel should be. Finish Funnel helps event teams size a **narrow, single-file** funnel so finishers stay in position order and **cannot overtake** each other before Finish Tokens are handed out.
+_Avoid_: Official parkrun guidance (it is not), wide funnel (defeats the purpose)
+
+**Finish Funnel landing page screenshot**:
+A capture of [Albert Melbourne #669 results](https://www.parkrun.com.au/albertmelbourne/results/669/) **after** **Analyse finish funnel** is activated — cropped from **#finish-funnel-metrics** through **#finish-funnel-queue-chart** (including the chart legend) so queue metrics and depth graph are clearly visible, with enough surrounding parkrun results-page context. Stored as `public/images/screenshot.png` in git; regenerated locally via `scripts/generate-screenshot.ts` (Puppeteer). Used on the landing page and as `og:image`.
+_Avoid_: Pre-activation screenshot (hides the product), panel-only crop (loses results-page context), CI-only screenshot generation (parkrun blocks bots)
+
+**Finish Funnel (beta)**:
+The current release quality of the **Finish Funnel userscript** and **Finish Funnel landing page**. Signalled in the userscript `@name` (`parkrun Finish Funnel (beta)`), `@description`, landing-page callout, and install CTA. Testers and corrections are welcome via GitHub issues.
+_Avoid_: Preview, experimental (understates that it runs on live results pages)
+
+**Finish Funnel landing page**:
+The public site at johnsy.com/finish-funnel/ — explains what the userscript does, why it exists, and how to install it. Uses self-contained **site chrome** matching parkrun utility microsites: aubergine `#header` (breadcrumbs + title), white `#content` card, aubergine `#footer`. Section order inside **content**: **About** (what, **Why Finish Funnel exists**, **Finish Funnel (beta)** callout, version facts from `package.json` at build time) → **Privacy and data** → **Getting started** → **Finish Funnel landing page screenshot** → **Install** → **Support**. HTML head carries Foretoken-style metadata (`canonical`, Open Graph, Twitter Card, JSON-LD). Not the simulation UI; event teams use the **Finish Funnel userscript** on their results page.
+_Avoid_: Development app (retired), demo (the landing page does not run the simulation)
+
+**Site chrome**:
+The visible johnsy.com framing on the **Finish Funnel landing page**: breadcrumb trail (`johnsy.com` → `parkrun utilities` → `Finish Funnel`), aubergine header band, white content card, and matching footer. Self-contained in the static build — not injected by the main johnsy.com Jekyll site.
+_Avoid_: Parent layout (Finish Funnel ships its own chrome), in-page footer only (omits header breadcrumbs)
 
 **Finish Funnel userscript build**:
-The userscript bundle produced from this repository (`src/userscript/` entry point) — packages the shared simulation core and DOM injection for Tampermonkey-style installation on parkrun results pages.
+The userscript bundle produced from this repository (`src/userscript/` entry point) — packages the shared simulation core and DOM injection for Tampermonkey-style installation on parkrun results pages. The installable artefact is `finish-funnel.user.js` at the **repository root** (copied from the Vite build on release). `@downloadURL` and `@updateURL` point at `raw.githubusercontent.com` on the `johnsyweb/finish-funnel` repository — not the johnsy.com CDN. `@supportURL` points at `https://github.com/johnsyweb/finish-funnel/issues`.
 _Avoid_: External package (v1 keeps build in-repo), bookmarklet
 
 **Finish funnel**:
@@ -137,7 +153,7 @@ A finisher whose published result time is missing or unparseable. Assigned the p
 _Avoid_: Unknown time (describes the data, not the person), missing time
 
 **Site constraints**:
-The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **model recommendation**. On live results pages the **Finish Funnel userscript** restores **site constraints** from **persisted event settings** keyed by event path. In the **Finish Funnel development app**, fixture selection sets sensible defaults per course and resets both values when the fixture changes. Changing site constraints or simulation settings recomputes the model recommendation and re-syncs the **layout** to match (discarding any manual tweak).
+The physical limits of the course for roping off finish funnel lanes: **maximum lane length** and **maximum lane count**. Entered by the event team; drive the **model recommendation**. On live results pages the **Finish Funnel userscript** restores **site constraints** from **persisted event settings** keyed by event path. Changing site constraints or simulation settings recomputes the model recommendation and re-syncs the **layout** to match (discarding any manual tweak).
 _Avoid_: Course limits (too vague), venue settings
 
 **Persisted event settings**:
@@ -165,16 +181,16 @@ The finish funnel layout the event team configures for simulation and queue visu
 _Avoid_: Proposed funnel, configured layout (too vague), current setup
 
 **Event results**:
-The finish position, name, and published finish time for each finisher from a parkrun event results page. On live pages the userscript reads the existing results table; the standalone development app loads bundled fixtures. Parsed and Unknown-handled in finish-funnel first; proven logic shared with the userscript.
+The finish position, name, and published finish time for each finisher from a parkrun event results page. On live pages the userscript reads the existing results table. Parsed and Unknown-handled in finish-funnel first; proven logic shared with the userscript.
 _Avoid_: Results data, finish data (too vague)
 
 **Results row**:
-One finisher’s published entry from the parkrun results table: finish position, name, and finish time, plus parkrun’s own columns (gender, age group, club, and so on). The **Finish Funnel userscript** augments each row with simulation fields; the **Finish Funnel development app** shows the same fields in a reconstructed table for testing.
+One finisher’s published entry from the parkrun results table: finish position, name, and finish time, plus parkrun’s own columns (gender, age group, club, and so on). The **Finish Funnel userscript** augments each row with simulation fields.
 _Avoid_: Result line, table row (too generic without “results”)
 
 **Augmented results table**:
 The parkrun event results table on a live results page after the **Finish Funnel userscript** injects one **Finish funnel column** into the existing `<table>`. Parkrun’s published columns and rows are preserved; Finish Funnel cells use parkrun’s **compact** and **detailed** display pattern so simulation detail appears when the event team switches View Settings to Detailed. Simulation runs on the full **event results** once; when parkrun search, sort, or view toggles change the table body, the userscript re-augments visible rows by finish position — no separate search in the **Finish Funnel panel**.
-_Avoid_: Reconstructed results table (development app only), enhanced table (too vague)
+_Avoid_: Reconstructed results table (retired), enhanced table (too vague)
 
 **Finish funnel column**:
 The single simulation column the **Finish Funnel userscript** adds to the **augmented results table**, placed after **Time** (rightmost). In **compact** **results display mode**: status only (**In queue**, **At finish line**, or blank). In **detailed** mode: lane, physical batch, queue position, time waiting, time until token, total estimated queueing time, and Finish Tokens volunteer — populated according to each finisher’s state at the **selected moment**; blank where not applicable.
@@ -229,11 +245,11 @@ At the selected moment, a finisher who has already had a finisher arrival but ha
 _Avoid_: Waiting runner, person in queue (too informal)
 
 **Queue visualisation**:
-The UI shown at the **selected moment**. On live results pages: **queue moment summary** plus the **augmented results table**. In the **Finish Funnel development app**: the same summary plus a mock parkrun results table with a **Finish funnel column** — same compact/detailed markup as the **Finish Funnel userscript**, not a separate wide grid. Simulation fields on each **results row** reflect that finisher’s state at the selected moment; blank where not applicable. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
+The UI shown at the **selected moment**. On live results pages: **queue moment summary** plus the **augmented results table**. Simulation fields on each **results row** reflect that finisher’s state at the selected moment; blank where not applicable. Unknown finishers are flagged as estimated. A spatial diagram of the physical funnel is out of scope for the first version.
 _Avoid_: Queue view, funnel map (ambiguous with capacity sizing)
 
 **Event results table at selected moment**:
-Retired term — use **augmented results table** on live pages and the same single-column layout in the **Finish Funnel development app**. Do not maintain a separate multi-column reconstructed table.
+Retired term — use **augmented results table** on live pages. Do not maintain a separate multi-column reconstructed table.
 _Avoid_: Full results table (too generic), queue table (ambiguous with queued-only), augmented results table (live pages)
 
 **Queue moment summary**:
@@ -277,5 +293,5 @@ Event-wide statistics over final **total estimated queueing time** at token hand
 _Avoid_: Wait time stats, queue duration summary
 
 **Finish Tokens settings**:
-The configurable token handover rate (tokens per minute for the active Finish Tokens volunteer), number of Finish Tokens volunteers in rotation, token supply batch size, and token supply fetch delay used in the simulation. On live results pages, volunteer count comes from the **volunteers roster** (Finish Tokens rows only); other values restore from **persisted event settings** or defaults. In the **Finish Funnel development app**, fixture selection sets sensible defaults for batch size (e.g. Mernda 100, Albert Melbourne 30, Bushy 30). Default handover rate: 15 tokens/min; default volunteers: 1; default fetch delay: 30 seconds.
+The configurable token handover rate (tokens per minute for the active Finish Tokens volunteer), number of Finish Tokens volunteers in rotation, token supply batch size, and token supply fetch delay used in the simulation. On live results pages, volunteer count comes from the **volunteers roster** (Finish Tokens rows only); other values restore from **persisted event settings** or defaults. Default handover rate: 15 tokens/min; default volunteers: 1; default fetch delay: 30 seconds.
 _Avoid_: Service settings, handover settings

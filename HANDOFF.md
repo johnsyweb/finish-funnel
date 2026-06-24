@@ -179,7 +179,7 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Delivery              | `dist/finish-funnel.user.js` with Tampermonkey metadata; `aube run build:userscript`                                                       |
 | Activation            | **Analyse finish funnel** button on parkrun results pages; toggle hide                                                                     |
-| Panel                 | Settings, metrics, **On the day**, queue depth chart + legend, queue moment summary; shares core markup with dev app where possible        |
+| Panel                 | Settings, metrics, **On the day**, queue depth chart + legend, queue moment summary                                                        |
 | Settings              | Finish Tokens (volunteer count read-only from roster), site constraints, layout assumptions, layout; persisted per event path              |
 | Layout vs assumptions | Changing **layout** lane count/length preserves layout assumption inputs; simulation clamps finisher spacing without rewriting inputs      |
 | Metrics               | One-line peak queue capacity; **event queue time summary** (max, mean, median at token handover); layout adequacy; conditional backup/gaps |
@@ -190,7 +190,7 @@ Implementation issue: [`docs/issues/18-userscript-augment-results-page.md`](./do
 
 ### Not done
 
-- No deployment to johnsy.com (dev app or userscript bundle)
+- No deployment to johnsy.com (landing page or userscript bundle)
 
 ---
 
@@ -223,7 +223,7 @@ finish-funnel/
 
 ```bash
 mise run setup
-aube run dev
+aube run dev          # landing page at http://localhost:5173
 aube test
 mise run check
 aube run build:fixtures   # needs /tmp/*.html from curl (see README)
@@ -234,7 +234,7 @@ aube run build:userscript
 
 ## Suggested next steps (priority order)
 
-1. **Deploy** — host dev app and `finish-funnel.user.js` on johnsy.com
+1. **Deploy** — host landing page and `finish-funnel.user.js` on johnsy.com/finish-funnel/
 2. **Live QA** — exercise userscript on Albert Melbourne and other high-attendance events; tune persisted defaults if needed
 
 ---
