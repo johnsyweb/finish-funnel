@@ -39,9 +39,14 @@ describe("buildLandingPageMarkup", () => {
   it("includes beta callout, why, and support links", () => {
     const markup = buildLandingPageMarkup();
 
+    expect(markup).toContain("landing-lead");
+    expect(markup).toContain("model queue depth");
     expect(markup).toContain("beta-callout");
     expect(markup).toContain("cannot overtake");
     expect(markup).toContain("little practical guidance");
+    expect(markup).not.toContain(
+      "handed out in position order during busy finish periods",
+    );
     expect(markup).toContain(SUPPORT_URL);
     expect(markup).toContain("Testers and corrections are welcome");
   });

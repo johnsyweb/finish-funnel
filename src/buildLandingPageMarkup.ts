@@ -52,7 +52,7 @@ function buildLandingContentMarkup({
 
   return `
     <p class="landing-lead">
-      Size a finish funnel so Finish Tokens can be handed out in position order during busy finish periods.
+      A userscript for parkrun event teams — model queue depth from your results page and plan finish funnel layout.
     </p>
 
     <section class="script-section script-section--about" aria-labelledby="about-heading">
@@ -64,9 +64,10 @@ function buildLandingContentMarkup({
       </p>
 
       <p>
-        ${USERSCRIPT_NAME} acts on parkrun event results pages (e.g.
+        ${USERSCRIPT_NAME} activates on parkrun event results pages (e.g.
         <a href="${SCREENSHOT_REFERENCE_URL}">Albert Melbourne #669 results</a>).
-        It helps event teams size a finish funnel so Finish Tokens can be handed out in position order during busy finish periods.
+        It simulates finisher arrivals and Finish Tokens handover so you can choose lane length and count,
+        read peak queue metrics, and brief your team on the day.
       </p>
 
       <h3 id="why-heading">Why</h3>
