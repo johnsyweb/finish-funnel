@@ -9,4 +9,5 @@ if (!app) {
 app.innerHTML = buildLandingPageMarkup({
   version: __APP_VERSION__,
   updatedDate: __APP_BUILD_DATE__,
+  screenshotSrc: `${import.meta.env.BASE_URL}images/screenshot.png`,
 });

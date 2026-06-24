@@ -13,16 +13,20 @@ const headMarkup = buildLandingPageHeadMarkup({ version: packageJson.version });
 function injectLandingHeadPlugin(): Plugin {
   return {
     name: "inject-landing-head",
-    transformIndexHtml(html) {
-      return html.replace(
-        /<head>[\s\S]*?<\/head>/,
-        `<head>\n    ${headMarkup}\n  </head>`,
-      );
+    transformIndexHtml: {
+      order: "pre",
+      handler(html) {
+        return html.replace(
+          /<head>\s*<\/head>/,
+          `<head>\n    ${headMarkup}\n  </head>`,
+        );
+      },
     },
   };
 }
 
 export default defineConfig({
+  base: "/finish-funnel/",
   plugins: [injectLandingHeadPlugin()],
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
