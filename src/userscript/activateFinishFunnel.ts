@@ -1,109 +1,83 @@
 import {
-  augmentResultsTableDom,
-  clearFinishFunnelColumn,
-} from "../augmentResultsTableDom";
-import { finishFunnelColumnMarkupByPosition } from "../buildFinishFunnelColumnMarkup";
-import { eventResultsAtMoment } from "../eventResultsAtMoment";
-import { finishTokensSettingsFromVolunteers } from "../finishTokensSettingsFromVolunteers";
-import { analyzeFinishFunnel } from "../analyzeFinishFunnel";
-import { formatFinishClockTime } from "../formatFinishClockTime";
-import { parseResultsFromDocument } from "../parseResultsFromDocument";
-import { parseVolunteersFromDocument } from "../parseVolunteersFromDocument";
+  eventPathFromResultsPageUrl,
+  persistedEventSettingsStorageKey,
+} from "../eventPathFromResultsPageUrl";
+import {
+  DEFAULT_PERSISTED_EVENT_SETTINGS,
+  loadPersistedEventSettings,
+  type PersistedEventSettings,
+  type SettingsStorage,
+} from "../persistedEventSettings";
+import { resolveFinishFunnelActivation } from "../resolveFinishFunnelActivation";
+import {
+  attachFinishFunnelPanel,
+  FINISH_FUNNEL_PANEL_ID,
+} from "./attachFinishFunnelPanel";
+import { clearFinishFunnelColumn } from "../augmentResultsTableDom";
 import {
   ANALYSE_FINISH_FUNNEL_BUTTON_LABEL,
   HIDE_FINISH_FUNNEL_BUTTON_LABEL,
   mountAnalyseFinishFunnelButton,
 } from "./mountAnalyseFinishFunnelButton";
-import { buildFinishFunnelPanelShellMarkup } from "./buildFinishFunnelPanelShellMarkup";
 
-export const FINISH_FUNNEL_PANEL_ID = "finish-funnel-panel";
+export { FINISH_FUNNEL_PANEL_ID };
 
 export type ActivatedFinishFunnelState = {
-  finishers: ReturnType<typeof parseResultsFromDocument>;
-  volunteers: ReturnType<typeof parseVolunteersFromDocument>;
-  analysis: ReturnType<typeof analyzeFinishFunnel>;
+  finishers: NonNullable<
+    ReturnType<typeof resolveFinishFunnelActivation>
+  >["finishers"];
+  volunteers: NonNullable<
+    ReturnType<typeof resolveFinishFunnelActivation>
+  >["volunteers"];
+  analysis: NonNullable<
+    ReturnType<typeof resolveFinishFunnelActivation>
+  >["analysis"];
   momentSeconds: number;
+  disconnect: () => void;
 };
 
 export function activateFinishFunnelOnDocument(
   document: Document,
   {
+    persisted,
     momentSeconds,
-    laneCount,
-    laneLengthMetres,
-    decelerationZoneMetres,
-    finisherSpacingMetres,
-    maximumLaneCount,
-    maximumLaneLengthMetres,
+    storage,
+    storageKey,
   }: {
+    persisted: PersistedEventSettings;
     momentSeconds?: number;
-    laneCount: number;
-    laneLengthMetres: number;
-    decelerationZoneMetres: number;
-    finisherSpacingMetres: number;
-    maximumLaneCount: number;
-    maximumLaneLengthMetres: number;
+    storage?: SettingsStorage;
+    storageKey?: string;
   },
 ): ActivatedFinishFunnelState | undefined {
-  const table = document.querySelector<HTMLTableElement>(
-    "table.Results-table.js-ResultsTable",
-  );
-  if (!table) {
+  const resolved = resolveFinishFunnelActivation(document, {
+    persisted,
+    momentSeconds,
+  });
+  if (!resolved) {
     return undefined;
   }
 
-  const finishers = parseResultsFromDocument(document);
-  if (finishers.length === 0) {
-    return undefined;
-  }
-
-  const volunteers = parseVolunteersFromDocument(document);
-  const finishTokensSettings = finishTokensSettingsFromVolunteers(volunteers);
-
-  const analysis = analyzeFinishFunnel({
-    finishers,
-    finishTokensSettings,
-    decelerationZoneMetres,
-    finisherSpacingMetres,
-    maximumLaneCount,
-    maximumLaneLengthMetres,
-    laneCount,
-    laneLengthMetres,
-  });
-
-  const selectedMomentSeconds =
-    momentSeconds ??
-    analysis.queueDepthOverTime.find(
-      (point) => point.queueDepth === analysis.peakQueueDepth,
-    )?.timeSeconds ??
-    0;
-
-  const queueResult = eventResultsAtMoment({
-    finishers,
-    finishTokensSettings,
-    momentSeconds: selectedMomentSeconds,
-    laneCount,
-    laneLengthMetres,
-    decelerationZoneMetres,
-    finisherSpacingMetres,
-  });
-
-  let panel = document.querySelector(`#${FINISH_FUNNEL_PANEL_ID}`);
-  if (!panel) {
-    panel = document.createElement("section");
-    panel.id = FINISH_FUNNEL_PANEL_ID;
-    panel.className = "finish-funnel-panel";
-    panel.innerHTML = buildFinishFunnelPanelShellMarkup({
-      peakQueueDepth: analysis.peakQueueDepth,
-      selectedMomentLabel: formatFinishClockTime(selectedMomentSeconds),
-    });
-    table.parentElement?.insertAdjacentElement("beforebegin", panel);
-  }
-
-  augmentResultsTableDom(
+  const {
     table,
-    finishFunnelColumnMarkupByPosition(queueResult.finishers),
-  );
+    finishers,
+    volunteers,
+    layout,
+    analysis,
+    momentSeconds: selectedMomentSeconds,
+  } = resolved;
+
+  const panelSession = attachFinishFunnelPanel({
+    document,
+    table,
+    finishers,
+    volunteers,
+    persisted,
+    layout,
+    storage,
+    storageKey,
+    momentSeconds: selectedMomentSeconds,
+  });
 
   const button = document.querySelector<HTMLButtonElement>(
     "#finish-funnel-analyse-button",
@@ -116,8 +90,41 @@ export function activateFinishFunnelOnDocument(
     finishers,
     volunteers,
     analysis,
-    momentSeconds: selectedMomentSeconds,
+    momentSeconds: panelSession.momentSeconds,
+    disconnect: () => {
+      panelSession.disconnect();
+    },
   };
+}
+
+export function activateFinishFunnelWithPersistedSettings(
+  document: Document,
+  {
+    pageUrl,
+    storage,
+    momentSeconds,
+  }: {
+    pageUrl: string;
+    storage: SettingsStorage;
+    momentSeconds?: number;
+  },
+): ActivatedFinishFunnelState | undefined {
+  const eventPath = eventPathFromResultsPageUrl(pageUrl);
+  const storageKey = eventPath
+    ? persistedEventSettingsStorageKey(eventPath)
+    : undefined;
+  const persisted = storageKey
+    ? loadPersistedEventSettings(storage, storageKey)
+    : { ...DEFAULT_PERSISTED_EVENT_SETTINGS };
+
+  const state = activateFinishFunnelOnDocument(document, {
+    persisted,
+    momentSeconds,
+    storage,
+    storageKey,
+  });
+
+  return state;
 }
 
 export function deactivateFinishFunnelOnDocument(document: Document): void {
@@ -142,25 +149,27 @@ export function mountFinishFunnelUserscript(
   document: Document,
   {
     pageUrl = document.location.href,
+    storage = window.localStorage,
   }: {
     pageUrl?: string;
+    storage?: SettingsStorage;
   } = {},
 ): void {
+  let session: ActivatedFinishFunnelState | undefined;
+
   mountAnalyseFinishFunnelButton(document, {
     pageUrl,
     isActive: false,
     onActivate: () => {
-      activateFinishFunnelOnDocument(document, {
-        laneCount: 1,
-        laneLengthMetres: 30,
-        decelerationZoneMetres: 5,
-        finisherSpacingMetres: 0.75,
-        maximumLaneCount: 3,
-        maximumLaneLengthMetres: 300,
+      session = activateFinishFunnelWithPersistedSettings(document, {
+        pageUrl,
+        storage,
       });
     },
     onDeactivate: () => {
+      session?.disconnect();
       deactivateFinishFunnelOnDocument(document);
+      session = undefined;
     },
   });
 }
