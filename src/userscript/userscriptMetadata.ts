@@ -1,3 +1,14 @@
+import {
+  DEFAULT_USERSCRIPT_DOWNLOAD_URL,
+  SCREENSHOT_REFERENCE_URL,
+  SITE_HOMEPAGE,
+  SUPPORT_URL,
+  USERSCRIPT_DESCRIPTION,
+  USERSCRIPT_NAME,
+} from "../siteConstants";
+
+export { DEFAULT_USERSCRIPT_DOWNLOAD_URL } from "../siteConstants";
+
 export const PARKRUN_RESULTS_MATCHES = [
   "*://www.parkrun.ca/*/results/*",
   "*://www.parkrun.co.at/*/results/*",
@@ -22,9 +33,6 @@ export const PARKRUN_RESULTS_MATCHES = [
   "*://www.parkrun.us/*/results/*",
 ] as const;
 
-export const DEFAULT_USERSCRIPT_DOWNLOAD_URL =
-  "https://www.johnsy.com/finish-funnel/finish-funnel.user.js";
-
 export function buildUserscriptMetadata({
   version,
   downloadUrl = DEFAULT_USERSCRIPT_DOWNLOAD_URL,
@@ -39,19 +47,23 @@ export function buildUserscriptMetadata({
   ).join("\n");
 
   return `// ==UserScript==
-// @name         Finish Funnel
-// @description  Size a parkrun finish funnel for orderly finish token handover on results pages.
+// @name         ${USERSCRIPT_NAME}
+// @description  ${USERSCRIPT_DESCRIPTION}
 // @author       Pete Johns (@johnsyweb)
 // @downloadURL  ${downloadUrl}
 // @grant        none
-// @homepage     https://www.johnsy.com/finish-funnel/
+// @homepage     ${SITE_HOMEPAGE}
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=parkrun.com.au
 // @license      MIT
 ${matchLines}
-// @namespace    https://www.johnsy.com/finish-funnel
+// @namespace    ${SITE_HOMEPAGE}
 // @run-at       document-end
 // @tag          parkrun
-// @supportURL   https://github.com/johnsyweb/parkrun-utilities/issues
+// @supportURL   ${SUPPORT_URL}
+// @screenshot-url       ${SCREENSHOT_REFERENCE_URL}
+// @screenshot-selector  #finish-funnel-panel
+// @screenshot-timeout   12000
+// @screenshot-viewport  1200x800
 // @updateURL    ${updateUrl}
 // @version      ${version}
 // ==/UserScript==`;
