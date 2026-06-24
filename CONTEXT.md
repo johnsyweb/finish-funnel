@@ -185,7 +185,7 @@ How parkrun shows each results table: **compact** (minimal columns and cell cont
 _Avoid_: View mode (too generic), table density
 
 **Finisher spacing**:
-The assumed along-lane distance in metres each finisher occupies in a single-file finish funnel lane. Configurable; default 0.75 m. Used to derive the queue portion of physical funnel length from queue capacity. Lane width is not modelled separately — finish funnel lanes are single-file with no overtaking.
+The assumed along-lane distance in metres each finisher occupies in a single-file finish funnel lane. Configurable in **layout assumptions**; default 0.75 m. Used to derive the queue portion of physical funnel length from queue capacity. Lane width is not modelled separately — finish funnel lanes are single-file with no overtaking. When **layout** lane length or lane count changes, the input value is preserved; the simulation clamps spacing to the lane queue zone without rewriting **layout assumptions**.
 _Avoid_: Metres per person (too informal), lane density, lane width
 
 **Deceleration zone**:
@@ -207,6 +207,10 @@ _Avoid_: Rope run (informal), boundary line (too generic), one cordon per lane (
 **Queue depth**:
 The number of finishers waiting in the finish funnel for a finish token at a given moment during the event. The peak queue depth determines the recommended queue capacity. Charted against clock finish time on the x-axis as an orange line on the **queue depth chart**.
 _Avoid_: Backlog (ambiguous with processing delays), queue length (ambiguous with physical length)
+
+**Peak queue capacity**:
+The peak queue depth from the uncapped simulation, shown in the metrics panel as a one-line card: `Peak queue capacity: N finishers`. Also the label for the peak reference line on the **queue depth chart**.
+_Avoid_: Maximum queue depth (ambiguous with layout capacity), peak backlog
 
 **Queue depth chart**:
 The queue depth over finish time plot. Shows queue depth through the event, horizontal reference lines for peak queue capacity and combined lane capacity, batch marker moments on multi-lane layouts, and the selected-moment indicator. A **chart legend** below the plot lists only the elements currently visible.
@@ -265,8 +269,12 @@ At the selected moment, how much longer until a queued finisher receives a finis
 _Avoid_: Remaining wait, time to serve
 
 **Total estimated queueing time**:
-For a queued finisher at the selected moment, the full wait from finisher arrival to simulated token handover: token handover time minus finisher arrival. Equals time waiting plus time until token at that instant. Shown as a clock duration.
+For a finisher, the full wait from finisher arrival to simulated token handover: token handover time minus finisher arrival. At the **selected moment**, shown for queued finishers as time waiting plus time until token at that instant. At token handover, the final value for each finisher who received a token. Shown as a clock duration.
 _Avoid_: Total wait, queue duration (ambiguous with physical funnel length)
+
+**Event queue time summary**:
+Event-wide statistics over final **total estimated queueing time** at token handover: maximum, mean, and median across every finisher who received a token in the **layout simulation**, including zero-wait handovers. Median uses the standard definition (average of the two middle values when the count is even). Always shown in the metrics panel immediately after peak queue capacity as its own one-line card (`Queue time: … max · … mean · … median`). Mean and median are floored to whole seconds for display, matching max and other clock durations in the panel. The UI label is **mean**, not avg. Does not include mode.
+_Avoid_: Wait time stats, queue duration summary
 
 **Finish Tokens settings**:
 The configurable token handover rate (tokens per minute for the active Finish Tokens volunteer), number of Finish Tokens volunteers in rotation, token supply batch size, and token supply fetch delay used in the simulation. On live results pages, volunteer count comes from the **volunteers roster** (Finish Tokens rows only); other values restore from **persisted event settings** or defaults. In the **Finish Funnel development app**, fixture selection sets sensible defaults for batch size (e.g. Mernda 100, Albert Melbourne 30, Bushy 30). Default handover rate: 15 tokens/min; default volunteers: 1; default fetch delay: 30 seconds.

@@ -26,15 +26,15 @@ Tracer-bullet vertical slices for production delivery on live results pages. Glo
 
 ## Slice 2
 
-- [ ] `MutationObserver` re-augment on parkrun search/sort/view toggle
-- [ ] **Persisted event settings** (localStorage per event path)
-- [ ] Finish Token Support → zero fetch delay wiring
+- [x] `MutationObserver` re-augment on parkrun search/sort/view toggle
+- [x] **Persisted event settings** (localStorage per event path)
+- [x] Finish Token Support → zero fetch delay wiring
 
 ## Slice 3
 
-- [ ] Userscript build (`.user.js` bundle)
-- [ ] README install instructions
-- [ ] HANDOFF update
+- [x] Userscript build (`.user.js` bundle)
+- [x] README install instructions
+- [x] HANDOFF update
 
 ## Done when
 

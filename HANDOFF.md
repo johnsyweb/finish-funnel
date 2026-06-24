@@ -1,7 +1,7 @@
 # Handoff: Finish Funnel app
 
-**Date:** 2026-06-21  
-**Status:** v1 sizing app, queue visualisation, multi-lane layout, and finish-line backup complete; not deployed; no userscript yet
+**Date:** 2026-06-24  
+**Status:** v1 sizing app complete; **Finish Funnel userscript** complete (build + panel + persisted settings); not deployed to johnsy.com
 
 ---
 
@@ -94,7 +94,7 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–13)
 
 ### Done
 
-- **Domain modules** (147 tests):
+- **Domain modules** (196 tests):
   - `simulateFinishFunnel`, `simulateFinishTokens`, `assignUnknownFinishTimes`, `spreadArrivalsWithinSecond`
   - `parseFinishTimeToSeconds`, `parseResultsHtml`
   - `recommendPhysicalFunnelLength`, `checkProposedFunnel`, `analyzeFinishFunnel`
@@ -104,7 +104,17 @@ Implementation issues: [`docs/issues/`](./docs/issues/) (#06–13)
 - **UI:** fixture selector (Mernda default), settings, metrics, adequacy, canvas chart with resize
 - **Tooling:** mise, aube, hk; eslint, prettier; `mise run check`
 - **Git:** atomic conventional commits on `main`
-- **Docs:** `README.md`, `CONTEXT.md`
+- **Docs:** `README.md`, `CONTEXT.md`, `HANDOFF.md`
+
+### Finish Funnel userscript (done — 2026-06-24)
+
+- `src/userscript/` entry, Tampermonkey metadata plugin, `vite.userscript.config.ts`
+- `parseResultsFromDocument`, `parseVolunteersFromDocument`, `resolveFinishFunnelActivation`
+- `attachFinishFunnelPanel` with settings inputs, simulation refresh, localStorage persistence
+- `attachResultsTableObserver` for parkrun search/sort re-augment
+- `persistedEventSettings`, `eventPathFromResultsPageUrl`, `finishTokensSettingsForEvent`
+- `eventQueueTimeSummary`, one-line metrics cards in `buildMetricsMarkup`
+- `runFinishFunnelSimulation` shared refresh logic (layout resync on settings change only)
 
 ### Fixture analysis (default settings: 1 Finish Tokens volunteer @ 15/min)
 
@@ -163,10 +173,24 @@ _Bushy 2 × 300 m → combined capacity 786; uncapped peak 1,042; with finish-li
 - Finish Tokens settings: batch size, fetch delay, rotation pool size
 - Albert Melbourne parkrun fixture (#693) with 2 × 200 m layout default
 
+### Finish Funnel userscript (done — 2026-06-24)
+
+| Topic                 | Decision                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Delivery              | `dist/finish-funnel.user.js` with Tampermonkey metadata; `aube run build:userscript`                                                       |
+| Activation            | **Analyse finish funnel** button on parkrun results pages; toggle hide                                                                     |
+| Panel                 | Settings, metrics, **On the day**, queue depth chart + legend, queue moment summary; shares core markup with dev app where possible        |
+| Settings              | Finish Tokens (volunteer count read-only from roster), site constraints, layout assumptions, layout; persisted per event path              |
+| Layout vs assumptions | Changing **layout** lane count/length preserves layout assumption inputs; simulation clamps finisher spacing without rewriting inputs      |
+| Metrics               | One-line peak queue capacity; **event queue time summary** (max, mean, median at token handover); layout adequacy; conditional backup/gaps |
+| Table                 | **Finish funnel column** after **Time**; re-augmented on tbody mutation (search/sort)                                                      |
+| Volunteers            | Finish Tokens → rotation count; Finish Token Support → fetch delay 0                                                                       |
+
+Implementation issue: [`docs/issues/18-userscript-augment-results-page.md`](./docs/issues/18-userscript-augment-results-page.md)
+
 ### Not done
 
-- No deployment to johnsy.com
-- No tampermonkey-parkrun userscript integration
+- No deployment to johnsy.com (dev app or userscript bundle)
 
 ---
 
@@ -182,12 +206,14 @@ finish-funnel/
 ├── README.md
 ├── index.html
 ├── package.json
+├── vite.userscript.config.ts
 ├── public/fixtures/
 ├── scripts/build-fixtures.ts
 └── src/
     ├── analyzeFinishFunnel.ts
     ├── simulateFinishFunnel.ts
     ├── main.ts
+    ├── userscript/         # Tampermonkey entry + panel
     └── __tests/
 ```
 
@@ -201,14 +227,15 @@ aube run dev
 aube test
 mise run check
 aube run build:fixtures   # needs /tmp/*.html from curl (see README)
+aube run build:userscript
 ```
 
 ---
 
 ## Suggested next steps (priority order)
 
-1. **Userscript** — port parser + APIs to tampermonkey-parkrun
-2. **Deploy** — johnsy.com hosting alongside other parkrun utilities
+1. **Deploy** — host dev app and `finish-funnel.user.js` on johnsy.com
+2. **Live QA** — exercise userscript on Albert Melbourne and other high-attendance events; tune persisted defaults if needed
 
 ---
 

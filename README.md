@@ -18,9 +18,26 @@ aube test
 mise run check
 aube run build:fixtures   # requires cached HTML in /tmp from parkrun results pages
 aube run build
+aube run build:userscript
 ```
 
 Git hooks are managed by [hk](https://hk.jdx.dev/); `mise run setup` runs `hk install --mise`. To skip hooks once: `HK=0 git commit`.
+
+## Userscript
+
+Build the Tampermonkey/Greasemonkey bundle:
+
+```bash
+aube run build:userscript
+```
+
+Install `dist/finish-funnel.user.js` in your userscript manager, or subscribe from `https://www.johnsy.com/finish-funnel/finish-funnel.user.js` once deployed. The built file includes Tampermonkey metadata (`@name`, `@match`, `@version`, and so on) matching the [Eventuate](https://www.johnsy.com/eventuate/eventuate.user.js) pattern.
+
+On a parkrun event results page, click **Analyse finish funnel** to inject the **Finish Funnel panel** and **Finish funnel** column after **Time**.
+
+The panel mirrors the dev app: settings (Finish Tokens, site constraints, layout assumptions, layout), metrics (peak queue capacity, event queue time summary, layout adequacy), **On the day** setup, queue depth chart with legend, and queue moment summary. Changing layout lane count or length does not rewrite layout assumptions — finisher spacing is clamped for simulation only.
+
+Settings (site constraints, layout assumptions, Finish Tokens except volunteer count) persist in `localStorage` per event path (e.g. `/mernda/`). Volunteer count and fetch delay come from the **Volunteers roster** on each activation. First visit uses defaults (1 lane × 30 m site constraints); configure maximum lane length and count for your course on first use.
 
 ## Fixtures
 
@@ -41,7 +58,7 @@ aube run build:fixtures
 - **Site constraints** (maximum lane length, maximum lane count) drive **model recommendation**; **Layout** fieldset pre-filled for simulation and manual tweaks
 - **On the day** panel: cordon stake count (N + 1 shared cordon lines) and batch marker cards from layout
 - Multi-lane: lane assignment with batch marker cards on lane-fill switches; finish-line backup when layout is configured; queue moment summary and augmented results table at selected moment
-- Userscript slice 1: parse results/volunteers DOM, **Finish funnel column**, **Analyse finish funnel** activation (see `src/userscript/`)
+- Userscript: parse results/volunteers DOM, settings panel, metrics (peak queue capacity + event queue time summary), **Finish funnel column**, **Analyse finish funnel** activation, persisted event settings, tbody re-augment (see `src/userscript/`)
 - Chart capacity reference lines for layout; model recommendation when layout differs
 
 See `CONTEXT.md` for domain language.
