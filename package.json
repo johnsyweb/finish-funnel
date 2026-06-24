@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:userscript": "tsc && vite build --config vite.userscript.config.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
