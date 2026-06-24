@@ -1,6 +1,11 @@
 import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
+import type { EventQueueTimeSummary } from "./eventQueueTimeSummary";
 import type { ModelRecommendation } from "./recommendFunnelLayout";
 import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
+import {
+  buildEventQueueTimeSummaryLine,
+  buildPeakQueueCapacityLine,
+} from "./buildMetricsInlineLines";
 import { formatFinishClockTime } from "./formatFinishClockTime";
 import type { FunnelLayoutAdequacy } from "./multiLaneFunnel";
 
@@ -20,6 +25,7 @@ function layoutSummary(
 
 export function buildMetricsMarkup({
   peakQueueDepth,
+  eventQueueTimeSummary,
   layout,
   modelRecommendation,
   layoutMatchesModelRecommendation,
@@ -27,6 +33,7 @@ export function buildMetricsMarkup({
   tokenSupplyGaps,
 }: {
   peakQueueDepth: number;
+  eventQueueTimeSummary: EventQueueTimeSummary;
   layout: {
     laneCount: number;
     laneLengthMetres: number;
@@ -66,11 +73,8 @@ export function buildMetricsMarkup({
     </div>`;
 
   return `
-    <div class="metric">
-      <span>Peak queue capacity</span>
-      <strong>${peakQueueDepth}</strong>
-      finishers
-    </div>
+    <div class="metric metric-inline">${buildPeakQueueCapacityLine(peakQueueDepth)}</div>
+    <div class="metric metric-inline">${buildEventQueueTimeSummaryLine(eventQueueTimeSummary)}</div>
     <div class="metric adequacy ${layout.sufficient ? "ok" : "bad"}">
       <span>Layout</span>
       <strong>${layoutSummary(layout.laneCount, layout.laneLengthMetres, layout)}</strong>

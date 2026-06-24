@@ -121,6 +121,11 @@ select {
   color: var(--text);
 }
 
+.metric.metric-inline {
+  font-size: 1rem;
+  color: var(--text);
+}
+
 .layout-setup-stakes {
   margin: 0 0 0.25rem;
 }

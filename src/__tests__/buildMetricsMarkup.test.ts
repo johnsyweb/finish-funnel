@@ -18,17 +18,38 @@ const layoutCheck = {
   minimumLanesRequired: 3,
 };
 
+const eventQueueTimeSummary = {
+  maxSeconds: 272,
+  meanSeconds: 65.4,
+  medianSeconds: 48.5,
+  finisherCount: 515,
+};
+
 describe("buildMetricsMarkup", () => {
-  it("shows a single layout row when layout matches the model recommendation", () => {
+  it("shows peak queue capacity and queue time on one line each", () => {
     const markup = buildMetricsMarkup({
-      peakQueueDepth: 1042,
+      peakQueueDepth: 536,
+      eventQueueTimeSummary,
       layout: { laneCount: 3, laneLengthMetres: 266, ...layoutCheck },
       modelRecommendation,
       layoutMatchesModelRecommendation: true,
     });
 
-    expect(markup).toContain("Peak queue capacity");
-    expect(markup).toContain("1042");
+    expect(markup).toContain('class="metric metric-inline"');
+    expect(markup).toContain("Peak queue capacity: 536 finishers");
+    expect(markup).toContain("Queue time: 4:32 max · 1:05 mean · 0:48 median");
+  });
+
+  it("shows a single layout row when layout matches the model recommendation", () => {
+    const markup = buildMetricsMarkup({
+      peakQueueDepth: 1042,
+      eventQueueTimeSummary,
+      layout: { laneCount: 3, laneLengthMetres: 266, ...layoutCheck },
+      modelRecommendation,
+      layoutMatchesModelRecommendation: true,
+    });
+
+    expect(markup).toContain("Peak queue capacity: 1042 finishers");
     expect(markup).toContain("Layout");
     expect(markup).toContain("3 lanes × 266 m");
     expect(markup).toContain("Sufficient (2 finisher headroom)");
@@ -38,6 +59,7 @@ describe("buildMetricsMarkup", () => {
   it("shows model recommendation when layout has been tweaked", () => {
     const markup = buildMetricsMarkup({
       peakQueueDepth: 1042,
+      eventQueueTimeSummary,
       layout: {
         laneCount: 2,
         laneLengthMetres: 300,
@@ -61,6 +83,7 @@ describe("buildMetricsMarkup", () => {
   it("shows finish-line backup delay metrics when finishers were blocked", () => {
     const markup = buildMetricsMarkup({
       peakQueueDepth: 1042,
+      eventQueueTimeSummary,
       layout: {
         laneCount: 2,
         laneLengthMetres: 300,
@@ -85,6 +108,12 @@ describe("buildMetricsMarkup", () => {
   it("shows token supply gap metrics when handover paused for batch fetches", () => {
     const markup = buildMetricsMarkup({
       peakQueueDepth: 12,
+      eventQueueTimeSummary: {
+        maxSeconds: 30,
+        meanSeconds: 8,
+        medianSeconds: 5,
+        finisherCount: 12,
+      },
       layout: {
         laneCount: 2,
         laneLengthMetres: 200,

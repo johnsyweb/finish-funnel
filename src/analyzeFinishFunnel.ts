@@ -9,6 +9,8 @@ import {
 } from "./defaults";
 import { clampFinisherSpacingMetres } from "./finisherSpacingLimits";
 import type { FinishLineBackupDelaySummary } from "./finishLineBackupDelays";
+import type { EventQueueTimeSummary } from "./eventQueueTimeSummary";
+import { eventQueueTimeSummary } from "./eventQueueTimeSummary";
 import type { TokenSupplyGapSummary } from "./tokenSupplyGapSummary";
 import { finishLineBackupDelaySummary } from "./finishLineBackupDelays";
 import {
@@ -52,6 +54,7 @@ export type AnalyzeFinishFunnelResult = {
   finishLineBackupModelled: boolean;
   finishLineBackupDelays?: FinishLineBackupDelaySummary;
   tokenSupplyGaps?: TokenSupplyGapSummary;
+  eventQueueTimeSummary: EventQueueTimeSummary;
 };
 
 export function buildFinisherArrivals(
@@ -168,5 +171,8 @@ export function analyzeFinishFunnel(
     finishLineBackupModelled: layoutSimulation.finishLineBackupModelled,
     finishLineBackupDelays,
     tokenSupplyGaps: layoutSimulation.tokenSupplyGaps,
+    eventQueueTimeSummary: eventQueueTimeSummary(
+      layoutSimulation.finisherSchedules,
+    ),
   };
 }
