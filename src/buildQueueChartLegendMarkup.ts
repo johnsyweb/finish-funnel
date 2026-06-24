@@ -10,6 +10,14 @@ export type QueueChartLegendItem = {
   swatch: QueueChartLegendSwatch;
 };
 
+const SWATCH_ARIA_LABELS: Record<QueueChartLegendSwatch, string> = {
+  "queue-depth": "Solid orange line",
+  "peak-capacity": "Red dashed horizontal line",
+  "layout-capacity": "Green dashed horizontal line",
+  "model-recommendation-capacity": "Purple dashed horizontal line",
+  "batch-marker-moment": "Orange vertical line",
+};
+
 export function queueChartLegendItems({
   layoutQueueCapacity,
   modelRecommendationQueueCapacity,
@@ -50,21 +58,24 @@ export function queueChartLegendItems({
 
 export function buildQueueChartLegendMarkup(
   items: QueueChartLegendItem[],
+  { legendId = "queue-chart-legend" }: { legendId?: string } = {},
 ): string {
   if (items.length === 0) {
     return "";
   }
 
   const listItems = items
-    .map(
-      (item) => `
+    .map((item) => {
+      const swatchLabel = SWATCH_ARIA_LABELS[item.swatch];
+
+      return `
     <li>
-      <span class="chart-legend-swatch chart-legend-swatch--${item.swatch}" aria-hidden="true"></span>
-      ${item.label}
-    </li>`,
-    )
+      <span class="chart-legend-swatch chart-legend-swatch--${item.swatch}" role="img" aria-label="${swatchLabel}"></span>
+      <span>${item.label}</span>
+    </li>`;
+    })
     .join("");
 
-  return `<ul id="queue-chart-legend" class="chart-legend">${listItems}
+  return `<ul id="${legendId}" class="chart-legend" aria-label="Chart legend">${listItems}
   </ul>`;
 }

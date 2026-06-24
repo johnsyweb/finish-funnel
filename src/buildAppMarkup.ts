@@ -81,12 +81,12 @@ export function buildAppMarkup(): string {
       <fieldset>
         <legend>Layout</legend>
         <div class="field">
-          <label for="layout-lane-count">Lane count</label>
-          <input id="layout-lane-count" type="number" min="1" step="1" value="${defaultLayout.maximumLaneCount}" />
-        </div>
-        <div class="field">
           <label for="layout-lane-length">Lane length (m)</label>
           <input id="layout-lane-length" type="number" min="0" step="1" value="${defaultLayout.maximumLaneLengthMetres}" />
+        </div>
+        <div class="field">
+          <label for="layout-lane-count">Lane count</label>
+          <input id="layout-lane-count" type="number" min="1" step="1" value="${defaultLayout.maximumLaneCount}" />
         </div>
         <div class="field">
           <button type="button" id="reset-to-model-recommendation" hidden>Reset to model recommendation</button>
