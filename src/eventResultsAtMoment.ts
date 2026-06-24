@@ -77,15 +77,25 @@ export function firstMomentAtPeakQueueDepth(
   queueDepthOverTime: Array<{ timeSeconds: number; queueDepth: number }>,
   peakQueueDepth: number,
 ): number {
-  const firstPeak = queueDepthOverTime.find(
-    (point) => point.queueDepth === peakQueueDepth,
-  );
-
-  if (!firstPeak) {
-    throw new Error("Peak queue depth not found in simulation timeline");
+  if (queueDepthOverTime.length === 0) {
+    return 0;
   }
 
-  return firstPeak.timeSeconds;
+  const firstExactPeak = queueDepthOverTime.find(
+    (point) => point.queueDepth === peakQueueDepth,
+  );
+  if (firstExactPeak) {
+    return firstExactPeak.timeSeconds;
+  }
+
+  const peakInTimeline = Math.max(
+    ...queueDepthOverTime.map((point) => point.queueDepth),
+  );
+  const firstTimelinePeak = queueDepthOverTime.find(
+    (point) => point.queueDepth === peakInTimeline,
+  );
+
+  return firstTimelinePeak?.timeSeconds ?? queueDepthOverTime[0].timeSeconds;
 }
 
 function isQueuedAtMoment(

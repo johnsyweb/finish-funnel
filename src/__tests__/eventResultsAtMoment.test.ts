@@ -22,6 +22,23 @@ describe("firstMomentAtPeakQueueDepth", () => {
 
     expect(moment).toBe(20);
   });
+
+  it("falls back to the peak in the timeline when uncapped peak exceeds chart depth", () => {
+    const moment = firstMomentAtPeakQueueDepth(
+      [
+        { timeSeconds: 100, queueDepth: 38 },
+        { timeSeconds: 200, queueDepth: 40 },
+        { timeSeconds: 300, queueDepth: 40 },
+      ],
+      159,
+    );
+
+    expect(moment).toBe(200);
+  });
+
+  it("returns zero for an empty timeline", () => {
+    expect(firstMomentAtPeakQueueDepth([], 5)).toBe(0);
+  });
 });
 
 describe("eventResultsAtMoment", () => {
